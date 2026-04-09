@@ -141,6 +141,14 @@
         window.onload = () => {
             document.getElementById('matchDate').valueAsDate = new Date();
             renderRosters();
+
+            // [추가된 로직] 교류전 선택 시 B팀 명단 가리기
+            document.getElementById('matchType').addEventListener('change', function(e) {
+                const isFriendly = (e.target.value === '교류전');
+                document.querySelector('.roster-b').style.display = isFriendly ? 'none' : 'block';
+                if (isFriendly) teamB = []; // 교류전이면 B팀 명단 초기화
+                generateGoalEvents(); // 득점 폼 재계산
+            });
         };
 
         // 명단 버튼 렌더링
@@ -244,9 +252,11 @@
             for (let i = 0; i < scoreA; i++) {
                 container.appendChild(createGoalForm('A', i + 1, teamA));
             }
-            // B팀 득점 폼
-            for (let i = 0; i < scoreB; i++) {
-                container.appendChild(createGoalForm('B', i + 1, teamB));
+            // B팀 득점 폼 (자체전일 때만 생성)
+            if (document.getElementById('matchType').value === '자체전') {
+                for (let i = 0; i < scoreB; i++) {
+                    container.appendChild(createGoalForm('B', i + 1, teamB));
+                }
             }
         }
 
