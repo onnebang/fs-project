@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>매치 기록 입력 시스템</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; color: #2d3436; margin: 0; padding: 15px; padding-bottom: 80px; }
+        
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .title { font-size: 20px; font-weight: 800; margin-top: 0; margin-bottom: 15px; color: #0984e3; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        
+        /* 폼 요소 스타일 */
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 13px; font-weight: 700; color: #636e72; }
+        input[type="date"], input[type="text"], select { padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; font-size: 15px; outline: none; }
+        
+        /* 로스터 토글 그리드 */
+        .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        .toggle-btn { padding: 10px 5px; background: #f5f6fa; border: 1px solid #dcdde1; border-radius: 8px; font-size: 14px; font-weight: 600; color: #718093; text-align: center; cursor: pointer; transition: 0.2s; user-select: none; }
+        .toggle-btn.active { background: #0984e3; color: white; border-color: #0984e3; box-shadow: 0 2px 4px rgba(9, 132, 227, 0.3); transform: scale(1.05); }
+        .guest-btn { background: #fff200; color: #2d3436; border-color: #f1c40f; }
+        
+        /* 스탯 입력 리스트 */
+        .stat-row { background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; color: #2d3436; }
+        .stat-controls { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+        .number-control { display: flex; align-items: center; gap: 5px; }
+        .number-control button { width: 28px; height: 28px; border-radius: 50%; border: none; background: #dfe6e9; font-weight: bold; cursor: pointer; }
+        .number-control input { width: 30px; text-align: center; border: none; background: transparent; font-weight: bold; font-size: 16px; }
+        
+        .quarter-checks { display: flex; gap: 5px; }
+        .quarter-checks label { background: #eee; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .quarter-checks input[type="checkbox"] { display: none; }
+        .quarter-checks input[type="checkbox"]:checked + label { background: #00b894; color: white; }
+
+        .mom-radio { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: bold; color: #d63031; }
+        
+        /* 하단 고정 버튼 */
+        .floating-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); box-sizing: border-box; display: flex; justify-content: center; }
+        .submit-btn { background: #0984e3; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: 800; width: 100%; max-width: 400px; cursor: pointer; box-shadow: 0 4px 6px rgba(9, 132, 227, 0.3); }
+
+        /* 로그인 오버레이 */
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2d3436; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
+        .auth-box { background: white; padding: 30px; border-radius: 15px; width: 100%; max-width: 300px; text-align: center; }
+        .auth-box input { width: 100%; margin-bottom: 15px; box-sizing: border-box; text-align: center; }
+        .auth-box button { width: 100%; padding: 12px; background: #00b894; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <h2 style="margin-top: 0;">데이터 센터 접속</h2>
+            <p style="font-size: 13px; color: #636e72; margin-bottom: 20px;">접근 코드를 입력해주세요.</p>
+            <input type="password" id="accessCode" placeholder="접근 코드">
+            <button onclick="checkAuth()">입장하기</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">⚽ 매치 정보</div>
+        <div class="form-group">
+            <label>경기 일자</label>
+            <input type="date" id="matchDate">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>경기 유형</label>
+                <select id="matchType">
+                    <option value="자체전">자체 청백전</option>
+                    <option value="교류전">타 팀 교류전</option>
+                    <option value="대회">대회 매치</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>팀 평점 (1~5점)</label>
+                <select id="teamRating">
+                    <option value="5">⭐⭐⭐⭐⭐ (최고)</option>
+                    <option value="4" selected>⭐⭐⭐⭐ (좋음)</option>
+                    <option value="3">⭐⭐⭐ (보통)</option>
+                    <option value="2">⭐⭐ (아쉬움)</option>
+                    <option value="1">⭐ (최악)</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>상대팀 이름 (교류전/대회 시 작성)</label>
+            <input type="text" id="opponentName" placeholder="예: FC서울 우먼스">
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">🏃 출전 명단 선택</div>
+        <p style="font-size: 12px; color: #636e72; margin-top: -10px; margin-bottom: 15px;">출전한 선수를 터치하면 아래에 스탯 기입란이 생성됩니다.</p>
+        <div class="roster-grid" id="rosterGrid">
+            </div>
+    </div>
+
+    <div class="card" id="statSection" style="display: none;">
+        <div class="title">📊 개인 스탯 기록</div>
+        <div id="statList"></div>
+    </div>
+
+    <div class="floating-bar">
+        <button class="submit-btn" onclick="submitMatchData()">경기 기록 저장하기</button>
+    </div>
+
+    <script>
+        // Supabase 설정 (추후 DB 연동 시 사용)
+        /*
+        const supabaseUrl = '본인의_SUPABASE_URL';
+        const supabaseKey = '본인의_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        */
+
+        // 기본 로스터
+        const roster = [
+            '경은', '나영', '선민', '시현', '주원', '해수', '영은', '하림', '승민', '효린', 
+            '호원', '은재', '지혜', '인선', '은영', '서윤', '민지', '혜은', '혜린', '가은', 
+            '화인', '혜진', '수연', '혜선', '송희', '이지', '재인'
+        ];
+
+        let selectedPlayers = [];
+        let userRole = null; // 'member' or 'admin'
+
+        // 1. 권한 확인 로직
+        function checkAuth() {
+            const code = document.getElementById('accessCode').value;
+            if (code === 'entry2026') {
+                userRole = 'member';
+                initApp();
+            } else if (code === 'admin999') {
+                userRole = 'admin';
+                initApp();
+                // 관리자일 경우 수정 페이지로 이동하는 로직을 나중에 여기에 추가
+            } else {
+                alert('유효하지 않은 코드입니다.');
+            }
+        }
+
+        function initApp() {
+            document.getElementById('authOverlay').style.display = 'none';
+            // 오늘 날짜 기본 세팅
+            document.getElementById('matchDate').valueAsDate = new Date();
+            renderRosterGrid();
+        }
+
+        // 2. 로스터 토글 그리드 렌더링
+        function renderRosterGrid() {
+            const grid = document.getElementById('rosterGrid');
+            grid.innerHTML = '';
+            
+            roster.forEach(player => {
+                const btn = document.createElement('div');
+                btn.className = 'toggle-btn';
+                btn.innerText = player;
+                btn.onclick = () => togglePlayer(player, btn, false);
+                grid.appendChild(btn);
+            });
+
+            // 용병 추가 버튼
+            const guestBtn = document.createElement('div');
+            guestBtn.className = 'toggle-btn guest-btn';
+            guestBtn.innerText = '+ 용병';
+            guestBtn.onclick = () => {
+                const guestName = prompt("용병의 이름을 입력하세요:");
+                if (guestName) {
+                    const btn = document.createElement('div');
+                    btn.className = 'toggle-btn active guest-btn';
+                    btn.innerText = guestName + '(용병)';
+                    btn.onclick = () => togglePlayer(guestName, btn, true);
+                    grid.insertBefore(btn, guestBtn);
+                    togglePlayer(guestName, btn, true); // 바로 활성화
+                }
+            };
+            grid.appendChild(guestBtn);
+        }
+
+        // 3. 선수 선택/해제 및 스탯 폼 생성
+        function togglePlayer(name, btnElement, isGuest) {
+            const index = selectedPlayers.findIndex(p => p.name === name);
+            
+            if (index > -1) {
+                // 해제
+                selectedPlayers.splice(index, 1);
+                btnElement.classList.remove('active');
+            } else {
+                // 선택
+                selectedPlayers.push({ name: name, isGuest: isGuest, goals: 0, assists: 0 });
+                btnElement.classList.add('active');
+            }
+            renderStatForms();
+        }
+
+        function updateStat(playerName, type, delta) {
+            const player = selectedPlayers.find(p => p.name === playerName);
+            if (player) {
+                player[type] += delta;
+                if (player[type] < 0) player[type] = 0; // 음수 방지
+                document.getElementById(`${type}-${playerName}`).value = player[type];
+            }
+        }
+
+        function renderStatForms() {
+            const statSection = document.getElementById('statSection');
+            const statList = document.getElementById('statList');
+            
+            if (selectedPlayers.length === 0) {
+                statSection.style.display = 'none';
+                statList.innerHTML = '';
+                return;
+            }
+            
+            statSection.style.display = 'block';
+            statList.innerHTML = '';
+
+            selectedPlayers.forEach(p => {
+                const html = `
+                    <div class="stat-row" data-name="${p.name}">
+                        <div class="stat-header">
+                            <span>${p.name} ${p.isGuest ? '<span style="font-size:10px; background:#f1c40f; padding:2px 4px; border-radius:4px;">용병</span>' : ''}</span>
+                            <div class="mom-radio">
+                                <input type="radio" name="mom" value="${p.name}" id="mom-${p.name}">
+                                <label for="mom-${p.name}">⭐ MOM</label>
+                            </div>
+                        </div>
+                        
+                        <div class="quarter-checks">
+                            <span style="font-size: 13px; font-weight:bold; color:#636e72; margin-right:5px;">출전 세트:</span>
+                            <input type="checkbox" id="q1-${p.name}" value="1"><label for="q1-${p.name}">1Q</label>
+                            <input type="checkbox" id="q2-${p.name}" value="2"><label for="q2-${p.name}">2Q</label>
+                            <input type="checkbox" id="q3-${p.name}" value="3"><label for="q3-${p.name}">3Q</label>
+                            <input type="checkbox" id="q4-${p.name}" value="4"><label for="q4-${p.name}">4Q</label>
+                        </div>
+
+                        <div class="stat-controls">
+                            <div class="number-control">
+                                <span style="font-size: 13px; font-weight:bold; color:#636e72; width: 40px;">⚽ 득점</span>
+                                <button onclick="updateStat('${p.name}', 'goals', -1)">-</button>
+                                <input type="text" id="goals-${p.name}" value="${p.goals}" readonly>
+                                <button onclick="updateStat('${p.name}', 'goals', 1)">+</button>
+                            </div>
+                            <div class="number-control">
+                                <span style="font-size: 13px; font-weight:bold; color:#636e72; width: 40px;">👟 어시</span>
+                                <button onclick="updateStat('${p.name}', 'assists', -1)">-</button>
+                                <input type="text" id="assists-${p.name}" value="${p.assists}" readonly>
+                                <button onclick="updateStat('${p.name}', 'assists', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                statList.innerHTML += html;
+            });
+        }
+
+        // 4. 데이터 취합 및 제출 (현재는 콘솔 출력)
+        function submitMatchData() {
+            if (selectedPlayers.length === 0) return alert('출전 선수를 최소 1명 이상 선택해주세요.');
+
+            const matchData = {
+                date: document.getElementById('matchDate').value,
+                type: document.getElementById('matchType').value,
+                rating: document.getElementById('teamRating').value,
+                opponent: document.getElementById('opponentName').value,
+                records: []
+            };
+
+            const momElement = document.querySelector('input[name="mom"]:checked');
+            const momName = momElement ? momElement.value : null;
+
+            document.querySelectorAll('.stat-row').forEach(row => {
+                const name = row.getAttribute('data-name');
+                const playerState = selectedPlayers.find(p => p.name === name);
+                
+                // 체크된 쿼터 수집
+                const quarters = [];
+                row.querySelectorAll('.quarter-checks input:checked').forEach(cb => quarters.push(cb.value));
+
+                matchData.records.push({
+                    name: name,
+                    isGuest: playerState.isGuest,
+                    goals: playerState.goals,
+                    assists: playerState.assists,
+                    quarters: quarters.join(','),
+                    isMOM: momName === name
+                });
+            });
+
+            console.log("서버로 전송될 데이터 Payload:", matchData);
+            alert("데이터 구성 완료! (개발자 도구 콘솔을 확인하세요)\n추후 Supabase 연동 코드가 이곳에 작성됩니다.");
+            
+            // 추후 여기에 Supabase INSERT 쿼리 작성
+        }
+    </script>
+</body>
+</html>
