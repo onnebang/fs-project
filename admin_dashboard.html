@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코치진 통계 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #1a202c; color: #e2e8f0; margin: 0; padding: 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2d3748; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #63b3ed; }
+        
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-btn { background: #2d3748; color: #a0aec0; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .nav-btn.active { background: #3182ce; color: white; }
+
+        .panel { display: none; background: #2d3748; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .panel.active { display: block; }
+
+        /* 테이블 스타일 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #4a5568; }
+        th { background: #1a202c; color: #a0aec0; font-size: 13px; }
+        tr:hover { background: #4a5568; }
+        
+        .btn-action { background: #ecc94b; color: #744210; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* 평가 모달 (팝업) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #2d3748; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; color: white; }
+        .modal-title { font-size: 20px; font-weight: bold; color: #63b3ed; margin-top: 0; margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; color: #a0aec0; margin-bottom: 5px; }
+        .form-group select, .form-group input { width: 100%; padding: 10px; background: #1a202c; border: 1px solid #4a5568; color: white; border-radius: 8px; box-sizing: border-box; }
+        
+        .btn-submit { background: #38a169; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-close { background: transparent; color: #a0aec0; border: 1px solid #a0aec0; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* 로그인 오버레이 */
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a202c; display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .auth-box { background: #2d3748; padding: 30px; border-radius: 12px; text-align: center; }
+        .auth-box input { padding: 10px; border-radius: 8px; border: none; margin-bottom: 10px; width: 200px; text-align: center; }
+        .auth-box button { padding: 10px 20px; background: #3182ce; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <h2 style="color: white; margin-top: 0;">코치진 대시보드</h2>
+            <input type="password" id="adminCode" placeholder="관리자 코드 (admin999)"><br>
+            <button onclick="checkAdmin()">접속하기</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>📊 풉살 데이터 센터 (Coach Only)</h1>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('evaluation')">📋 평가 대기 경기</button>
+        <button class="nav-btn" onclick="switchTab('dashboard')">🔥 선수 스탯 리더보드</button>
+    </div>
+
+    <div id="panel-evaluation" class="panel active">
+        <h3 style="margin-top: 0; color: #ecc94b;">평가 및 시상 (MOM / MIP) 대기 목록</h3>
+        <p style="font-size: 13px; color: #a0aec0;">아직 코치진의 평점이 입력되지 않은 경기들입니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>유형</th>
+                    <th>경기 번호</th>
+                    <th>스코어 (A vs B)</th>
+                    <th>평가하기</th>
+                </tr>
+            </thead>
+            <tbody id="pendingGamesBody">
+                <tr><td colspan="5" style="text-align: center;">데이터를 불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="panel-dashboard" class="panel">
+        <h3 style="margin-top: 0; color: #63b3ed;">선수별 누적 스탯 (전체 기간)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>순위</th>
+                    <th>선수명</th>
+                    <th>출전</th>
+                    <th>⚽ 득점</th>
+                    <th>👟 도움</th>
+                    <th>⭐ MOM</th>
+                    <th>📈 MIP</th>
+                </tr>
+            </thead>
+            <tbody id="statsBody">
+                <tr><td colspan="7" style="text-align: center;">데이터를 계산하는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal-overlay" id="evalModal">
+        <div class="modal-content">
+            <div class="modal-title" id="evalModalTitle">경기 평가 입력</div>
+            
+            <div class="form-group">
+                <label>A팀 경기력 평점 (0.5 ~ 5.0)</label>
+                <input type="number" id="ratingA" min="0.5" max="5.0" step="0.5" value="3.0">
+            </div>
+            
+            <div class="form-group" id="ratingBGroup">
+                <label>B팀 경기력 평점 (0.5 ~ 5.0)</label>
+                <input type="number" id="ratingB" min="0.5" max="5.0" step="0.5" value="3.0">
+            </div>
+
+            <div class="form-group">
+                <label>⭐ 수훈 선수 (MOM)</label>
+                <select id="selectMOM"><option value="">선택 안함</option></select>
+            </div>
+
+            <div class="form-group">
+                <label>📈 기량 발전상 (MIP) - 이번 경기 눈에 띄게 폼이 좋았던 선수!</label>
+                <select id="selectMIP"><option value="">선택 안함</option></select>
+            </div>
+
+            <button class="btn-submit" onclick="submitEvaluation()">평가 완료 및 저장</button>
+            <button class="btn-close" onclick="closeModal()">취소</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // Supabase 연동 (진짜 키 입력)
+        // ==========================================
+        const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentEvalGameId = null;
+        let currentGamePlayers = []; // 평가창에 띄울 해당 경기 출전 선수 목록
+
+        function checkAdmin() {
+            if (document.getElementById('adminCode').value === 'admin999') {
+                document.getElementById('authOverlay').style.display = 'none';
+                loadPendingGames();
+                loadStats();
+            } else {
+                alert('접근 권한이 없습니다.');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`panel-${tabId}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ==========================================
+        // 1. 평가 대기 경기 불러오기
+        // ==========================================
+        async function loadPendingGames() {
+            // team_a_rating이 null인(아직 평가안된) 경기들만 불러옵니다.
+            const { data, error } = await supabaseClient
+                .from('games')
+                .select('*, match_days(match_date, match_type, opponent)')
+                .is('team_a_rating', null)
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('pendingGamesBody');
+            tbody.innerHTML = '';
+
+            if (error) return console.error(error);
+            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">평가 대기 중인 경기가 없습니다! 훌륭합니다.</td></tr>';
+
+            data.forEach(game => {
+                const tr = document.createElement('tr');
+                const isFriendly = game.match_days.match_type === '교류전';
+                const vsText = isFriendly ? `우리팀 ${game.team_a_score} : ${game.team_b_score} ${game.match_days.opponent||'상대팀'}` 
+                                          : `A팀 ${game.team_a_score} : ${game.team_b_score} B팀`;
+                
+                tr.innerHTML = `
+                    <td>${game.match_days.match_date}</td>
+                    <td>${game.match_days.match_type}</td>
+                    <td>${game.game_number}경기</td>
+                    <td style="font-weight:bold; color:#fff;">${vsText}</td>
+                    <td><button class="btn-action" onclick="openEvalModal('${game.id}', ${isFriendly})">평가하기</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ==========================================
+        // 2. 평가 모달창 띄우기 & 출전 선수 목록 세팅
+        // ==========================================
+        async function openEvalModal(gameId, isFriendly) {
+            currentEvalGameId = gameId;
+            document.getElementById('evalModal').style.display = 'flex';
+            
+            // 교류전이면 B팀 평점 입력창 숨기기
+            document.getElementById('ratingBGroup').style.display = isFriendly ? 'none' : 'block';
+
+            // 해당 경기에 출전한 선수들 목록 가져오기 (MOM/MIP 선택용)
+            const { data, error } = await supabaseClient
+                .from('game_lineups')
+                .select('player_id, players(name)')
+                .eq('game_id', gameId);
+
+            if (error) return console.error(error);
+
+            currentGamePlayers = data;
+            const selectMOM = document.getElementById('selectMOM');
+            const selectMIP = document.getElementById('selectMIP');
+            
+            let options = '<option value="">선택 안함</option>';
+            data.forEach(row => {
+                options += `<option value="${row.player_id}">${row.players.name}</option>`;
+            });
+
+            selectMOM.innerHTML = options;
+            selectMIP.innerHTML = options;
+        }
+
+        function closeModal() {
+            document.getElementById('evalModal').style.display = 'none';
+            currentEvalGameId = null;
+        }
+
+        // ==========================================
+        // 3. 평가 데이터 서버로 업데이트하기
+        // ==========================================
+        async function submitEvaluation() {
+            if (!currentEvalGameId) return;
+            
+            const rA = parseFloat(document.getElementById('ratingA').value);
+            const rB = document.getElementById('ratingBGroup').style.display === 'none' ? null : parseFloat(document.getElementById('ratingB').value);
+            const momId = document.getElementById('selectMOM').value;
+            const mipId = document.getElementById('selectMIP').value;
+
+            try {
+                // 1. games 테이블에 평점 업데이트
+                await supabaseClient.from('games')
+                    .update({ team_a_rating: rA, team_b_rating: rB })
+                    .eq('id', currentEvalGameId);
+
+                // 2. game_lineups 테이블에 MOM 지정
+                if (momId) {
+                    await supabaseClient.from('game_lineups').update({ is_mom: true }).eq('game_id', currentEvalGameId).eq('player_id', momId);
+                }
+
+                // 3. game_lineups 테이블에 MIP 지정
+                if (mipId) {
+                    await supabaseClient.from('game_lineups').update({ is_mip: true }).eq('game_id', currentEvalGameId).eq('player_id', mipId);
+                }
+
+                alert('평가가 성공적으로 반영되었습니다!');
+                closeModal();
+                loadPendingGames(); // 목록 새로고침
+                loadStats(); // 통계 새로고침
+
+            } catch (error) {
+                alert('업데이트 중 오류 발생: ' + error.message);
+            }
+        }
+
+        // ==========================================
+        // 4. 전체 통계 리더보드 계산 (Aggregation)
+        // ==========================================
+        async function loadStats() {
+            // 1. 모든 선수 목록 가져오기
+            const { data: players } = await supabaseClient.from('players').select('id, name').eq('is_guest', false);
+            
+            // 2. 모든 라인업 기록 (출전 횟수, MOM, MIP)
+            const { data: lineups } = await supabaseClient.from('game_lineups').select('player_id, is_mom, is_mip');
+            
+            // 3. 모든 득점 기록 (골, 어시스트)
+            const { data: goals } = await supabaseClient.from('game_goals').select('scorer_id, assist_id, is_own_goal');
+
+            // 선수별 데이터 집계 딕셔너리 생성
+            const stats = {};
+            players.forEach(p => {
+                stats[p.id] = { name: p.name, apps: 0, goals: 0, assists: 0, mom: 0, mip: 0 };
+            });
+
+            // 출전/MOM/MIP 합산
+            lineups.forEach(l => {
+                if (stats[l.player_id]) {
+                    stats[l.player_id].apps += 1;
+                    if (l.is_mom) stats[l.player_id].mom += 1;
+                    if (l.is_mip) stats[l.player_id].mip += 1;
+                }
+            });
+
+            // 골/어시스트 합산 (자책골 제외)
+            goals.forEach(g => {
+                if (!g.is_own_goal && g.scorer_id && stats[g.scorer_id]) stats[g.scorer_id].goals += 1;
+                if (g.assist_id && stats[g.assist_id]) stats[g.assist_id].assists += 1;
+            });
+
+            // 배열로 변환 후 정렬 (우선순위: 골 > 어시스트 > 출전수)
+            const statsArray = Object.values(stats).sort((a, b) => {
+                if (b.goals !== a.goals) return b.goals - a.goals;
+                if (b.assists !== a.assists) return b.assists - a.assists;
+                return b.apps - a.apps;
+            });
+
+            // 화면에 렌더링
+            const tbody = document.getElementById('statsBody');
+            tbody.innerHTML = '';
+            
+            statsArray.forEach((s, idx) => {
+                // 출전 기록이 아예 없는 선수는 리더보드에서 제외
+                if (s.apps === 0) return; 
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:bold; color:#ecc94b;">${idx + 1}</td>
+                    <td style="font-weight:bold;">${s.name}</td>
+                    <td>${s.apps}경기</td>
+                    <td style="color:#63b3ed; font-weight:bold;">${s.goals}</td>
+                    <td style="color:#63b3ed;">${s.assists}</td>
+                    <td style="color:#f6e05e;">${s.mom}</td>
+                    <td style="color:#fc8181;">${s.mip}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
