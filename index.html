@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FC 풉살 공식 데이터 센터</title>
+    <title>FC 풉살</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -32,19 +32,21 @@
         .vs { font-size: 16px; font-weight: bold; color: #a0aec0; }
         .match-footer { margin-top: 15px; font-size: 13px; font-weight: bold; color: #ecc94b; background: #fffbeb; padding: 8px; border-radius: 8px; display: inline-block; }
 
-        /* [추가] 시너지 팩트 폭행 카드 섹션 */
-        .synergy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        /* 시너지 팩트 폭행 카드 섹션 */
+        .synergy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .synergy-card { padding: 20px; border-radius: 16px; color: white; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .syn-duo { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
         .syn-nemesis { background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%); }
         .syn-shield { background: linear-gradient(135deg, #38a169 0%, #276749 100%); }
+        .syn-delivery { background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%); }
+        .syn-sad { background: linear-gradient(135deg, #718096 0%, #4a5568 100%); }
         
         .syn-icon { font-size: 24px; margin-bottom: 10px; }
         .syn-title { font-size: 14px; font-weight: bold; opacity: 0.9; margin-bottom: 5px; }
-        .syn-players { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
-        .syn-desc { font-size: 13px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; }
+        .syn-players { font-size: 20px; font-weight: 900; margin-bottom: 10px; line-height: 1.2; }
+        .syn-desc { font-size: 12px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; line-height: 1.4; }
 
-        /* 종합 스탯 리더보드 */
+        /* 리더보드 */
         .table-container { overflow-x: auto; margin-top: 10px; border-radius: 12px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 14px; }
@@ -53,14 +55,24 @@
         
         .col-pts { font-weight: 900; color: #3182ce; background: rgba(49,130,206,0.05); }
         .col-winrate { font-weight: bold; color: #38a169; }
-        .col-gd { font-weight: bold; } /* 득실차 컬럼 */
+        .col-gd { font-weight: bold; } 
         
         .rank-badge { display: inline-block; width: 24px; height: 24px; line-height: 24px; border-radius: 50%; font-weight: 900; font-size: 12px; color: #718096; background: #edf2f7; }
         .rank-1 { background: #ecc94b; color: white; box-shadow: 0 2px 4px rgba(236,201,75,0.4); transform: scale(1.1); }
         .rank-2 { background: #a0aec0; color: white; }
         .rank-3 { background: #ed8936; color: white; }
-
         tr:hover { background: #f8fafc; }
+
+        /* [추가] 영상 자료실 그리드 */
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .video-item { background: #1a202c; border-radius: 12px; overflow: hidden; cursor: pointer; transition: 0.2s; position: relative; }
+        .video-item:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .video-thumb { width: 100%; aspect-ratio: 16 / 9; background-size: cover; background-position: center; position: relative; }
+        .play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+        .video-info { padding: 12px; }
+        .video-tag { display: inline-block; background: #e53e3e; color: white; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-bottom: 5px; }
+        .video-title { color: white; font-size: 14px; font-weight: bold; line-height: 1.4; }
+
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
     </style>
 </head>
@@ -69,7 +81,7 @@
     <div class="header">
         <div class="admin-nav">
             <a href="game_entry.html">📝 현장 기입</a>
-            <a href="admin_dashboard.html">⚙️ 코치 평가</a>
+            <a href="admin_dashboard.html">⚙️ 관리자</a>
         </div>
         <h1>FC 풉살 데이터 센터</h1>
         <p>기록이 모여 전설이 되는 곳</p>
@@ -85,14 +97,13 @@
         <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
             <div class="card-title" style="padding-left: 5px;">🕵️‍♂️ 데이터 팩트 폭행 (최소 2경기 기준)</div>
             <div class="synergy-grid" id="synergyContainer">
-                <div class="synergy-card syn-duo"><div class="loading" style="color:white; padding:20px;">시너지 분석 중...</div></div>
+                <div class="loading" style="color:#718096; padding:20px;">시너지 분석 중...</div>
             </div>
         </div>
 
         <div class="card">
             <div class="card-title">🏆 2026 시즌 종합 스탯 랭킹</div>
             <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px;">* 공격포인트(골+도움) 순으로 정렬됩니다.</p>
-            
             <div class="table-container">
                 <table>
                     <thead>
@@ -103,7 +114,7 @@
                             <th>⚽ 골</th>
                             <th>👟 도움</th>
                             <th>⛔ 실점</th>
-                            <th class="col-gd">+/- (득실차)</th>
+                            <th class="col-gd">+/-</th>
                             <th>출전</th>
                             <th class="col-winrate">승률</th>
                             <th title="90분 환산 득점력">P90</th>
@@ -116,9 +127,18 @@
             </div>
         </div>
 
+        <div class="card">
+            <div class="card-title">📺 풉살 미디어 아카이브 (교육 & 하이라이트)</div>
+            <div class="video-grid" id="videoContainer">
+                </div>
+        </div>
+
     </div>
 
     <script>
+        // ==========================================
+        // Supabase 연동 (진짜 키 입력)
+        // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -126,6 +146,7 @@
         window.onload = () => {
             loadLatestMatch();
             loadDashboardData();
+            loadVideos();
         };
 
         // 1. 최근 경기
@@ -178,7 +199,6 @@
 
             if (playersRes.error || lineupsRes.error || goalsRes.error || gamesRes.error) return;
 
-            // 기본 데이터 매핑
             const playersMap = {};
             playersRes.data.forEach(p => playersMap[p.id] = p.name);
 
@@ -194,14 +214,11 @@
 
             const stats = {};
             playersRes.data.forEach(p => {
-                // [수정] conceded(실점) 추가
                 stats[p.id] = { name: p.name, isGuest: p.is_guest, apps: 0, wins: 0, playTime: 0, goals: 0, assists: 0, conceded: 0 };
             });
 
-            // 시너지 분석용 변수
-            const gameTeams = {}; // { gameId: { A: [id1, id2], B: [id3, id4] } }
+            const gameTeams = {}; 
             
-            // 라인업 순회 (출전, 승리, 실점 계산)
             lineupsRes.data.forEach(l => {
                 const pStat = stats[l.player_id];
                 const gameInfo = gamesMap[l.game_id];
@@ -209,36 +226,42 @@
                 if (pStat && gameInfo) {
                     pStat.apps += 1;
                     pStat.playTime += gameInfo.duration;
-                    
                     if (gameInfo.winner === l.team) pStat.wins += 1;
                     
-                    // [수정] 내가 속한 팀의 반대편 팀 스코어가 나의 '실점'
                     const concededGoals = (l.team === 'A') ? gameInfo.scoreB : gameInfo.scoreA;
                     pStat.conceded += concededGoals;
 
-                    // 시너지 연산 준비
                     if (!gameTeams[l.game_id]) gameTeams[l.game_id] = { A: [], B: [] };
                     if (gameTeams[l.game_id][l.team]) gameTeams[l.game_id][l.team].push(l.player_id);
                 }
             });
 
+            // 어시스트-골 조합 연산용 변수 (로켓 배송)
+            const assistDuos = {};
+
             goalsRes.data.forEach(g => {
                 if (!g.is_own_goal && g.scorer_id && stats[g.scorer_id]) stats[g.scorer_id].goals += 1;
-                if (g.assist_id && stats[g.assist_id]) stats[g.assist_id].assists += 1;
+                if (g.assist_id && stats[g.assist_id]) {
+                    stats[g.assist_id].assists += 1;
+                    // 배송 기록 저장
+                    if (g.scorer_id) {
+                        const pair = `${g.assist_id}|${g.scorer_id}`;
+                        assistDuos[pair] = (assistDuos[pair] || 0) + 1;
+                    }
+                }
             });
 
             // ======================================
             // [시너지 연산 로직]
             // ======================================
-            const duos = {};    // { "id1|id2": { games: 0, wins: 0 } }
-            const nemesis = {}; // { "winnerId|loserId": { games: 0, wins: 0 } }
+            const duos = {};    
+            const nemesis = {}; 
 
             for (const gameId in gameTeams) {
                 const teamA = gameTeams[gameId].A || [];
                 const teamB = gameTeams[gameId].B || [];
                 const winner = gamesMap[gameId].winner;
 
-                // 1. 같은 팀 듀오 (Team A)
                 for(let i=0; i<teamA.length; i++) {
                     for(let j=i+1; j<teamA.length; j++) {
                         const pair = [teamA[i], teamA[j]].sort().join('|');
@@ -247,7 +270,6 @@
                         if(winner === 'A') duos[pair].wins++;
                     }
                 }
-                // 1. 같은 팀 듀오 (Team B)
                 for(let i=0; i<teamB.length; i++) {
                     for(let j=i+1; j<teamB.length; j++) {
                         const pair = [teamB[i], teamB[j]].sort().join('|');
@@ -257,104 +279,120 @@
                     }
                 }
 
-                // 2. 적군 매치업 (Nemesis) - A vs B
                 teamA.forEach(a => {
                     teamB.forEach(b => {
-                        const pair1 = `${a}|${b}`; // a가 b를 만남
-                        const pair2 = `${b}|${a}`; // b가 a를 만남
+                        const pair1 = `${a}|${b}`; 
+                        const pair2 = `${b}|${a}`; 
                         
                         if (!nemesis[pair1]) nemesis[pair1] = { games: 0, wins: 0 };
                         if (!nemesis[pair2]) nemesis[pair2] = { games: 0, wins: 0 };
                         
                         nemesis[pair1].games++; nemesis[pair2].games++;
-                        
                         if (winner === 'A') nemesis[pair1].wins++;
                         else if (winner === 'B') nemesis[pair2].wins++;
                     });
                 });
             }
 
-            // 시너지 탑픽 찾기 (최소 2경기 이상 기준)
             const minGames = 2;
-            let bestDuo = { names: '데이터 부족', desc: '최소 2경기 이상 같이 뛴 조합이 필요합니다.', winRate: 0 };
-            let bestNemesis = { names: '데이터 부족', desc: '최소 2경기 이상 적으로 만난 기록이 필요합니다.', winRate: 0 };
-
+            
+            // 1. 최고 승률 듀오
+            let bestDuo = { names: '데이터 부족', desc: '최소 2경기 필요', winRate: 0 };
             for (const key in duos) {
                 if (duos[key].games >= minGames) {
                     const rate = duos[key].wins / duos[key].games;
                     if (rate > bestDuo.winRate) {
                         const [id1, id2] = key.split('|');
-                        bestDuo = { names: `${playersMap[id1]} & ${playersMap[id2]}`, desc: `함께 출전 시 승률 ${Math.round(rate*100)}% (${duos[key].games}전 ${duos[key].wins}승)`, winRate: rate };
+                        bestDuo = { names: `${playersMap[id1]} & ${playersMap[id2]}`, desc: `동반 출전 승률 ${Math.round(rate*100)}% (${duos[key].games}전 ${duos[key].wins}승)`, winRate: rate };
                     }
                 }
             }
 
+            // 2. 인간 상성 (천적)
+            let bestNemesis = { names: '데이터 부족', desc: '최소 2경기 필요', winRate: 0 };
             for (const key in nemesis) {
                 if (nemesis[key].games >= minGames) {
                     const rate = nemesis[key].wins / nemesis[key].games;
                     if (rate > bestNemesis.winRate) {
                         const [wId, lId] = key.split('|');
-                        bestNemesis = { names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, desc: `${playersMap[wId]}가 적으로 만났을 때 승률 ${Math.round(rate*100)}% (${nemesis[key].games}전 ${nemesis[key].wins}승)`, winRate: rate };
+                        bestNemesis = { names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, desc: `적군 조우 시 승률 ${Math.round(rate*100)}% (${nemesis[key].games}전 ${nemesis[key].wins}승)`, winRate: rate };
                     }
                 }
             }
 
-            // 국밥 수비수 (최소 2경기, 경기당 최소 실점)
-            let bestShield = { name: '데이터 부족', desc: '평가 중입니다...', avgConceded: 999 };
+            // 3. 국밥 수비수
+            let bestShield = { name: '데이터 부족', desc: '-', avgConceded: 999 };
             for (const key in stats) {
                 const s = stats[key];
                 if (s.apps >= minGames) {
                     const avg = s.conceded / s.apps;
                     if (avg < bestShield.avgConceded) {
-                        bestShield = { name: s.name, desc: `출전 시 팀 평균 실점 ${avg.toFixed(1)}골 (총 ${s.apps}경기)`, avgConceded: avg };
+                        bestShield = { name: s.name, desc: `출전 시 평균 실점 ${avg.toFixed(1)}골 (${s.apps}경기)`, avgConceded: avg };
                     }
                 }
             }
 
-            // 시너지 카드 렌더링
+            // 4. 로켓 배송 (최다 합작)
+            let bestDelivery = { names: '데이터 부족', desc: '-', goals: 0 };
+            for (const key in assistDuos) {
+                if (assistDuos[key] > bestDelivery.goals) {
+                    const [aId, sId] = key.split('|');
+                    bestDelivery = { names: `${playersMap[aId]} 👟➡️ ${playersMap[sId]} ⚽`, desc: `단일 루트 최다 합작 (${assistDuos[key]}골)`, goals: assistDuos[key] };
+                }
+            }
+
+            // 5. 억울한 에이스 (포인트 상위권이나 승률 최하위)
+            let sadAce = { name: '모두가 행복합니다', desc: '-', winRate: 100 };
+            const activePlayers = Object.values(stats).filter(s => s.apps >= minGames);
+            if (activePlayers.length > 0) {
+                const avgPoints = activePlayers.reduce((sum, s) => sum + (s.goals + s.assists), 0) / activePlayers.length;
+                activePlayers.forEach(s => {
+                    const pts = s.goals + s.assists;
+                    const rate = (s.wins / s.apps) * 100;
+                    if (pts >= avgPoints && rate < sadAce.winRate) {
+                        sadAce = { name: s.name, desc: `공격P 상위권이나 팀 승률 ${Math.round(rate)}%...😭`, winRate: rate };
+                    }
+                });
+            }
+
+            // 카드 렌더링 (5장)
             document.getElementById('synergyContainer').innerHTML = `
                 <div class="synergy-card syn-duo">
-                    <div>
-                        <div class="syn-icon">🔥</div>
-                        <div class="syn-title">영혼의 단짝 (최고 승률)</div>
-                        <div class="syn-players">${bestDuo.names}</div>
-                    </div>
+                    <div><div class="syn-icon">🔥</div><div class="syn-title">승리 보증 수표</div><div class="syn-players">${bestDuo.names}</div></div>
                     <div class="syn-desc">${bestDuo.desc}</div>
                 </div>
-                <div class="synergy-card syn-nemesis">
-                    <div>
-                        <div class="syn-icon">⚔️</div>
-                        <div class="syn-title">천적 주의보 (맞대결 상성)</div>
-                        <div class="syn-players">${bestNemesis.names}</div>
-                    </div>
-                    <div class="syn-desc">${bestNemesis.desc}</div>
+                <div class="synergy-card syn-delivery">
+                    <div><div class="syn-icon">📦</div><div class="syn-title">로켓 배송 완료 (최다 합작)</div><div class="syn-players">${bestDelivery.names}</div></div>
+                    <div class="syn-desc">${bestDelivery.desc}</div>
                 </div>
                 <div class="synergy-card syn-shield">
-                    <div>
-                        <div class="syn-icon">🛡️</div>
-                        <div class="syn-title">국밥 수비수 (최소 실점)</div>
-                        <div class="syn-players">${bestShield.name}</div>
-                    </div>
+                    <div><div class="syn-icon">🛡️</div><div class="syn-title">국밥 수비수 (최소 실점)</div><div class="syn-players">${bestShield.name}</div></div>
                     <div class="syn-desc">${bestShield.desc}</div>
+                </div>
+                <div class="synergy-card syn-nemesis">
+                    <div><div class="syn-icon">⚔️</div><div class="syn-title">인간 상성 (천적)</div><div class="syn-players">${bestNemesis.names}</div></div>
+                    <div class="syn-desc">${bestNemesis.desc}</div>
+                </div>
+                <div class="synergy-card syn-sad">
+                    <div><div class="syn-icon">😭</div><div class="syn-title">억울한 에이스</div><div class="syn-players">${sadAce.name}</div></div>
+                    <div class="syn-desc">${sadAce.desc}</div>
                 </div>
             `;
 
             // ======================================
-            // 리더보드 연산 및 렌더링 (득실차 포함)
+            // 리더보드 연산 및 렌더링
             // ======================================
-            const statsArray = Object.values(stats)
-                .filter(s => s.apps > 0)
-                .map(s => {
-                    const points = s.goals + s.assists;
-                    const gd = s.goals - s.conceded; // 득실차 계산
-                    const winRate = s.apps > 0 ? Math.round((s.wins / s.apps) * 100) : 0;
-                    const p90 = s.playTime > 0 ? ((s.goals / s.playTime) * 90).toFixed(2) : "0.00";
-                    return { ...s, points, gd, winRate, p90 };
-                });
+            const statsArray = activePlayers.map(s => {
+                const points = s.goals + s.assists;
+                const gd = s.goals - s.conceded; 
+                const winRate = s.apps > 0 ? Math.round((s.wins / s.apps) * 100) : 0;
+                const p90 = s.playTime > 0 ? ((s.goals / s.playTime) * 90).toFixed(2) : "0.00";
+                return { ...s, points, gd, winRate, p90 };
+            });
 
             statsArray.sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
-                if (b.gd !== a.gd) return b.gd - a.gd; // 포인트가 같으면 득실차가 높은 순
+                if (b.gd !== a.gd) return b.gd - a.gd; 
                 if (b.goals !== a.goals) return b.goals - a.goals;
                 if (b.winRate !== a.winRate) return b.winRate - a.winRate;
                 return a.apps - b.apps;
@@ -387,6 +425,46 @@
                     <td style="color:#718096; font-size:12px;">${s.p90}</td>
                 `;
                 tbody.appendChild(tr);
+            });
+        }
+
+        // ==========================================
+        // 3. [신규] 영상 자료실 불러오기
+        // ==========================================
+        async function loadVideos() {
+            // 테이블이 없으면 에러가 날 수 있으므로 예외처리
+            const { data, error } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: false });
+            const container = document.getElementById('videoContainer');
+            
+            if (error) {
+                return container.innerHTML = '<div style="color:#a0aec0; grid-column: 1 / -1; text-align:center; padding:20px;">SQL Editor에서 videos 테이블을 먼저 생성해주세요!</div>';
+            }
+            if (!data || data.length === 0) {
+                return container.innerHTML = '<div style="color:#a0aec0; grid-column: 1 / -1; text-align:center; padding:20px;">아직 등록된 영상이 없습니다.</div>';
+            }
+
+            container.innerHTML = '';
+            data.forEach(v => {
+                // 유튜브 URL에서 ID 추출하여 썸네일 이미지 링크 만들기
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = v.youtube_url.match(regExp);
+                const videoId = (match && match[2].length === 11) ? match[2] : null;
+                
+                const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : 'https://via.placeholder.com/640x360?text=No+Thumbnail';
+
+                const card = document.createElement('div');
+                card.className = 'video-item';
+                card.onclick = () => window.open(v.youtube_url, '_blank');
+                card.innerHTML = `
+                    <div class="video-thumb" style="background-image: url('${thumbUrl}');">
+                        <div class="play-btn">▶</div>
+                    </div>
+                    <div class="video-info">
+                        <span class="video-tag">${v.category}</span>
+                        <div class="video-title">${v.title}</div>
+                    </div>
+                `;
+                container.appendChild(card);
             });
         }
     </script>
