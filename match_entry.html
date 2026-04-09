@@ -103,12 +103,10 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. Supabase 초기 설정 (여기를 꼭 채워주세요!)
-        // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
 
         const roster = [
             '경은', '나영', '선민', '시현', '주원', '해수', '영은', '하림', '승민', '효린', 
@@ -119,7 +117,6 @@
         let selectedPlayers = [];
         let userRole = null;
 
-        // 권한 확인
         function checkAuth() {
             const code = document.getElementById('accessCode').value;
             if (code === 'entry2026') {
@@ -133,14 +130,12 @@
             }
         }
 
-        // 초기화
         function initApp() {
             document.getElementById('authOverlay').style.display = 'none';
             document.getElementById('matchDate').valueAsDate = new Date();
             renderRosterGrid();
         }
 
-        // 로스터 렌더링
         function renderRosterGrid() {
             const grid = document.getElementById('rosterGrid');
             grid.innerHTML = '';
@@ -170,7 +165,6 @@
             grid.appendChild(guestBtn);
         }
 
-        // 선수 선택 토글
         function togglePlayer(name, btnElement, isGuest) {
             const index = selectedPlayers.findIndex(p => p.name === name);
             if (index > -1) {
@@ -183,7 +177,6 @@
             renderStatForms();
         }
 
-        // 스탯 증감
         function updateStat(playerName, type, delta) {
             const player = selectedPlayers.find(p => p.name === playerName);
             if (player) {
@@ -193,7 +186,6 @@
             }
         }
 
-        // 스탯 입력폼 렌더링
         function renderStatForms() {
             const statSection = document.getElementById('statSection');
             const statList = document.getElementById('statList');
@@ -246,9 +238,6 @@
             });
         }
 
-        // ==========================================
-        // 데이터베이스 전송 로직
-        // ==========================================
         async function submitMatchData() {
             if (selectedPlayers.length === 0) return alert('출전 선수를 최소 1명 이상 선택해주세요.');
 
@@ -257,7 +246,6 @@
             submitBtn.disabled = true;
 
             try {
-                // 1. matches 테이블에 경기 정보 저장
                 const matchData = {
                     match_date: document.getElementById('matchDate').value,
                     match_type: document.getElementById('matchType').value,
@@ -274,7 +262,6 @@
                 
                 const newMatchId = matchResult[0].id;
 
-                // 2. 선수별 기록 정리 및 저장 준비
                 const momElement = document.querySelector('input[name="mom"]:checked');
                 const momName = momElement ? momElement.value : null;
                 const recordsToInsert = [];
@@ -286,7 +273,6 @@
                     const quarters = [];
                     row.querySelectorAll('.quarter-checks input:checked').forEach(cb => quarters.push(cb.value));
 
-                    // 선수 ID 확인 또는 신규 등록
                     let playerId;
                     const { data: existingPlayer } = await supabase
                         .from('players')
@@ -315,7 +301,6 @@
                     });
                 }
 
-                // 3. match_records 테이블에 일괄 저장
                 const { error: recordError } = await supabase
                     .from('match_records')
                     .insert(recordsToInsert);
