@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>구장 현장 기록 (팀원용)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f0f4f8; color: #1a202c; margin: 0; padding: 15px; padding-bottom: 90px; }
+        
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .title { font-size: 18px; font-weight: 800; color: #2d3748; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        
+        label { font-size: 13px; font-weight: 700; color: #718096; display: block; margin-bottom: 5px; }
+        input[type="number"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; background: #f8fafc; }
+        .row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .col { flex: 1; }
+
+        /* 로스터 선택 UI */
+        .roster-area { padding: 10px; border-radius: 12px; margin-bottom: 15px; }
+        .roster-a { background: rgba(49, 130, 206, 0.05); border: 1px solid #bee3f8; }
+        .roster-b { background: rgba(229, 62, 62, 0.05); border: 1px solid #fed7d7; }
+        
+        .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; margin-top: 10px; }
+        .player-btn { padding: 10px 5px; background: white; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 13px; font-weight: 700; color: #4a5568; text-align: center; cursor: pointer; transition: 0.2s; user-select: none; }
+        .player-btn.active-a { background: #3182ce; color: white; border-color: #3182ce; box-shadow: 0 2px 4px rgba(49,130,206,0.3); }
+        .player-btn.active-b { background: #e53e3e; color: white; border-color: #e53e3e; box-shadow: 0 2px 4px rgba(229,62,62,0.3); }
+        .gk-badge { display: block; font-size: 10px; color: #ecc94b; margin-top: 2px; }
+
+        /* 스코어보드 */
+        .scoreboard { display: flex; align-items: center; justify-content: space-between; background: #2d3748; padding: 20px; border-radius: 16px; color: white; margin-bottom: 15px; }
+        .score-team { text-align: center; flex: 1; }
+        .score-input { font-size: 36px; font-weight: 900; width: 60px; text-align: center; background: transparent; border: none; color: white; border-bottom: 2px solid #4a5568; padding: 0; }
+        .score-vs { font-size: 20px; font-weight: bold; color: #718096; padding: 0 15px; }
+
+        /* 동적 득점 이벤트 UI */
+        .goal-event-card { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 5px solid #cbd5e0; }
+        .goal-a { border-left-color: #3182ce; }
+        .goal-b { border-left-color: #e53e3e; }
+        .goal-title { font-size: 14px; font-weight: 800; margin-bottom: 10px; color: #2d3748; }
+
+        .floating-btn { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #38a169; color: white; padding: 16px 40px; border-radius: 30px; font-size: 16px; font-weight: 800; border: none; box-shadow: 0 10px 15px -3px rgba(56,161,105,0.4); cursor: pointer; width: 90%; max-width: 400px; z-index: 100; transition: 0.2s; }
+        .floating-btn:disabled { background: #a0aec0; cursor: not-allowed; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="title">📅 1. 경기 기본 정보</div>
+        <div class="row">
+            <div class="col"><label>경기 날짜</label><input type="date" id="matchDate"></div>
+            <div class="col"><label>경기 시간(분)</label><input type="number" id="duration" value="15"></div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>경기 유형</label>
+                <select id="matchType">
+                    <option value="자체전">자체 청백전</option>
+                    <option value="교류전">타 팀 교류전</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>몇 번째 경기?</label>
+                <input type="number" id="gameNumber" value="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">🏃 2. 출전 명단 (터치하여 선택)</div>
+        <p style="font-size: 12px; color: #718096; margin-top:-10px;">* 골키퍼를 지정하려면 선택된 선수를 한 번 더 터치하세요.</p>
+        
+        <div class="roster-area roster-a">
+            <label style="color: #2b6cb0;">🟦 A팀 명단</label>
+            <div class="roster-grid" id="gridA"></div>
+        </div>
+        
+        <div class="roster-area roster-b">
+            <label style="color: #c53030;">🟥 B팀 명단</label>
+            <div class="roster-grid" id="gridB"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">⚽ 3. 경기 결과</div>
+        
+        <div class="scoreboard">
+            <div class="score-team">
+                <div style="color: #63b3ed; font-weight: 800; margin-bottom: 5px;">A팀</div>
+                <input type="number" id="scoreA" class="score-input" value="0" min="0" onchange="generateGoalEvents()">
+            </div>
+            <div class="score-vs">VS</div>
+            <div class="score-team">
+                <div style="color: #fc8181; font-weight: 800; margin-bottom: 5px;">B팀</div>
+                <input type="number" id="scoreB" class="score-input" value="0" min="0" onchange="generateGoalEvents()">
+            </div>
+        </div>
+
+        <div id="goalEventsContainer">
+            <div style="text-align: center; color: #a0aec0; font-size: 13px; padding: 10px;">스코어를 올리면 득점자 입력창이 나타납니다.</div>
+        </div>
+    </div>
+
+    <button class="floating-btn" id="submitBtn" onclick="submitGameData()">이 경기 기록 서버로 전송하기</button>
+
+    <script>
+        // ==========================================
+        // Supabase 연동 (본인 키 입력)
+        // ==========================================
+        const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const roster = [
+            '경은', '나영', '선민', '시현', '주원', '해수', '영은', '하림', '승민', '효린', 
+            '호원', '은재', '지혜', '인선', '은영', '김서윤', '정서윤','민지', '혜은', '혜린', '가은', 
+            '화인', '혜진', '수연', '혜선', '송희', '이지', '재인', '연주'
+        ];
+
+        // 상태 관리 (팀별 선수 객체 배열: {name, isGk})
+        let teamA = [];
+        let teamB = [];
+
+        window.onload = () => {
+            document.getElementById('matchDate').valueAsDate = new Date();
+            renderRosters();
+        };
+
+        // 명단 버튼 렌더링
+        function renderRosters() {
+            const gridA = document.getElementById('gridA');
+            const gridB = document.getElementById('gridB');
+            gridA.innerHTML = ''; gridB.innerHTML = '';
+
+            roster.forEach(player => {
+                // A팀 버튼
+                const btnA = document.createElement('div');
+                btnA.className = 'player-btn';
+                btnA.innerText = player;
+                btnA.onclick = () => togglePlayer(player, 'A', btnA);
+                gridA.appendChild(btnA);
+
+                // B팀 버튼
+                const btnB = document.createElement('div');
+                btnB.className = 'player-btn';
+                btnB.innerText = player;
+                btnB.onclick = () => togglePlayer(player, 'B', btnB);
+                gridB.appendChild(btnB);
+            });
+        }
+
+        // 명단 선택 및 골키퍼 토글 로직
+        function togglePlayer(name, team, btn) {
+            const teamArray = team === 'A' ? teamA : teamB;
+            const activeClass = team === 'A' ? 'active-a' : 'active-b';
+            const existingIndex = teamArray.findIndex(p => p.name === name);
+
+            if (existingIndex > -1) {
+                // 이미 선택됨 -> GK 상태 토글 -> 해제
+                if (!teamArray[existingIndex].isGk) {
+                    teamArray[existingIndex].isGk = true;
+                    btn.innerHTML = `${name} <span class="gk-badge">🧤 GK</span>`;
+                } else {
+                    teamArray.splice(existingIndex, 1);
+                    btn.innerHTML = name;
+                    btn.classList.remove(activeClass);
+                }
+            } else {
+                // 첫 선택
+                // 다른 팀에 있으면 경고
+                const otherArray = team === 'A' ? teamB : teamA;
+                if (otherArray.some(p => p.name === name)) {
+                    return alert("이미 반대 팀에 선택된 선수입니다!");
+                }
+                teamArray.push({ name: name, isGk: false });
+                btn.classList.add(activeClass);
+            }
+            generateGoalEvents(); // 득점자 드롭다운 명단 업데이트
+        }
+
+        // 스코어 연동 동적 득점폼 생성 로직
+        function generateGoalEvents() {
+            const scoreA = parseInt(document.getElementById('scoreA').value) || 0;
+            const scoreB = parseInt(document.getElementById('scoreB').value) || 0;
+            const container = document.getElementById('goalEventsContainer');
+            container.innerHTML = '';
+
+            if (scoreA === 0 && scoreB === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #a0aec0; font-size: 13px; padding: 10px;">스코어를 올리면 득점자 입력창이 나타납니다.</div>';
+                return;
+            }
+
+            // A팀 득점 폼
+            for (let i = 0; i < scoreA; i++) {
+                container.appendChild(createGoalForm('A', i + 1, teamA));
+            }
+            // B팀 득점 폼
+            for (let i = 0; i < scoreB; i++) {
+                container.appendChild(createGoalForm('B', i + 1, teamB));
+            }
+        }
+
+        function createGoalForm(teamLabel, index, teamPlayers) {
+            const card = document.createElement('div');
+            card.className = `goal-event-card goal-${teamLabel.toLowerCase()}`;
+            
+            // 해당 팀 선수 이름으로 `<option>` 태그 생성
+            let options = '<option value="">선택 안함 / 알 수 없음</option>';
+            teamPlayers.forEach(p => {
+                options += `<option value="${p.name}">${p.name}</option>`;
+            });
+            options += '<option value="OWN_GOAL" style="color:red;">자책골 (Own Goal)</option>';
+
+            // 어시스트는 자책골이 없으므로 분리
+            let assistOptions = '<option value="">어시스트 없음</option>';
+            teamPlayers.forEach(p => {
+                assistOptions += `<option value="${p.name}">${p.name}</option>`;
+            });
+
+            card.innerHTML = `
+                <div class="goal-title">${teamLabel}팀 ${index}번째 골</div>
+                <div class="row">
+                    <div class="col">
+                        <label>⚽ 득점자</label>
+                        <select class="goal-scorer" data-team="${teamLabel}">${options}</select>
+                    </div>
+                    <div class="col">
+                        <label>👟 도움</label>
+                        <select class="goal-assist">${assistOptions}</select>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // ==========================================
+        // 🚀 서버로 데이터 전송하는 마법의 로직 (Backend Sync)
+        // ==========================================
+        async function submitGameData() {
+            if (teamA.length === 0 || teamB.length === 0) return alert("A팀과 B팀 명단을 최소 1명 이상 선택하세요.");
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "데이터 전송 중...";
+            btn.disabled = true;
+
+            try {
+                const date = document.getElementById('matchDate').value;
+                const type = document.getElementById('matchType').value;
+                const gameNum = parseInt(document.getElementById('gameNumber').value);
+                const duration = parseInt(document.getElementById('duration').value);
+
+                // 1. Match Day 조회 또는 생성 (같은 날짜면 하나로 묶기)
+                let matchDayId;
+                const { data: existingDays } = await supabase.from('match_days').select('id').eq('match_date', date).eq('match_type', type);
+                
+                if (existingDays && existingDays.length > 0) {
+                    matchDayId = existingDays[0].id;
+                } else {
+                    const { data: newDay, error: dayErr } = await supabase.from('match_days').insert([{ match_date: date, match_type: type }]).select();
+                    if(dayErr) throw dayErr;
+                    matchDayId = newDay[0].id;
+                }
+
+                // 2. Games 테이블에 경기 스코어 기록
+                const gameData = {
+                    match_day_id: matchDayId,
+                    game_number: gameNum,
+                    duration_mins: duration,
+                    team_a_score: parseInt(document.getElementById('scoreA').value),
+                    team_b_score: parseInt(document.getElementById('scoreB').value)
+                };
+                const { data: newGame, error: gameErr } = await supabase.from('games').insert([gameData]).select();
+                if(gameErr) throw gameErr;
+                const gameId = newGame[0].id;
+
+                // 3. 선수 ID 매핑 및 Lineups(명단) 등록
+                const allPlayers = [...teamA.map(p => ({...p, team: 'A'})), ...teamB.map(p => ({...p, team: 'B'}))];
+                const lineupInserts = [];
+                
+                // (빠른 처리를 위해 먼저 DB에서 전체 선수 id를 한번에 불러옵니다)
+                const { data: dbPlayers } = await supabase.from('players').select('id, name');
+                const nameToId = {};
+                dbPlayers.forEach(p => nameToId[p.name] = p.id);
+
+                for (const p of allPlayers) {
+                    let pId = nameToId[p.name];
+                    // 만약 DB에 없는 이름이면 즉시 생성 (용병 대비)
+                    if (!pId) {
+                        const { data: created } = await supabase.from('players').insert([{name: p.name}]).select();
+                        pId = created[0].id;
+                        nameToId[p.name] = pId; // 다음을 위해 저장
+                    }
+                    lineupInserts.push({
+                        game_id: gameId,
+                        player_id: pId,
+                        team: p.team,
+                        is_gk: p.isGk
+                    });
+                }
+                const { error: lineupErr } = await supabase.from('game_lineups').insert(lineupInserts);
+                if(lineupErr) throw lineupErr;
+
+                // 4. 득점 이벤트(Goals) 등록
+                const goalInserts = [];
+                document.querySelectorAll('.goal-event-card').forEach(card => {
+                    const scorerSelect = card.querySelector('.goal-scorer');
+                    const assistSelect = card.querySelector('.goal-assist');
+                    const teamLabel = scorerSelect.getAttribute('data-team');
+                    
+                    const scorerName = scorerSelect.value;
+                    const assistName = assistSelect.value;
+
+                    if (scorerName) {
+                        goalInserts.push({
+                            game_id: gameId,
+                            scoring_team: teamLabel,
+                            scorer_id: scorerName === 'OWN_GOAL' ? null : nameToId[scorerName],
+                            assist_id: assistName ? nameToId[assistName] : null,
+                            is_own_goal: scorerName === 'OWN_GOAL'
+                        });
+                    }
+                });
+
+                if (goalInserts.length > 0) {
+                    const { error: goalErr } = await supabase.from('game_goals').insert(goalInserts);
+                    if(goalErr) throw goalErr;
+                }
+
+                // 완료
+                alert(`✅ ${gameNum}경기 기록이 완벽하게 저장되었습니다!`);
+                // 다음 경기 입력을 위해 페이지 새로고침 (혹은 폼 비우기)
+                document.getElementById('gameNumber').value = gameNum + 1;
+                document.getElementById('scoreA').value = 0;
+                document.getElementById('scoreB').value = 0;
+                generateGoalEvents();
+                
+            } catch(e) {
+                console.error(e);
+                alert("저장 실패: " + e.message);
+            } finally {
+                btn.innerText = "이 경기 기록 서버로 전송하기";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
