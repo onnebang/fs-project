@@ -69,6 +69,7 @@
     <div class="nav-tabs">
         <button class="nav-btn active" onclick="switchTab('evaluation')">📋 평가 대기 경기</button>
         <button class="nav-btn" onclick="switchTab('dashboard')">🔥 선수 스탯 리더보드</button>
+        <button class="nav-btn" onclick="switchTab('history')">📚 완료된 경기 기록</button>
     </div>
 
     <div id="panel-evaluation" class="panel active">
@@ -114,6 +115,28 @@
         </div>
     </div>
 
+
+    <div id="panel-history" class="panel">
+        <h3 style="margin-top: 0; color: #63b3ed;">과거 경기 결과 및 코치진 평점</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>경기</th>
+                        <th>스코어 (A vs B)</th>
+                        <th>평점 (A / B)</th>
+                        <th>MOM</th>
+                        <th>평가 코치</th>
+                    </tr>
+                </thead>
+                <tbody id="historyGamesBody">
+                    <tr><td colspan="6" style="text-align: center;">데이터를 불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
     <div class="modal-overlay" id="evalModal">
         <div class="modal-content">
             <div class="modal-title" id="evalModalTitle">경기 복기 및 평가</div>
@@ -380,6 +403,50 @@
                     <td style="color:#63b3ed;">${s.assists}</td>
                     <td style="color:#f6e05e;">${s.mom}</td>
                     <td style="color:#fc8181;">${s.mip}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 5. 완료된(평가된) 경기 불러오기
+        async function loadHistoryGames() {
+            // team_a_rating이 null이 아닌(평가 완료된) 경기들만 불러옵니다.
+            const { data, error } = await supabaseClient
+                .from('games')
+                .select(`
+                    *, 
+                    match_days(match_date, match_type, opponent),
+                    game_lineups(player_id, is_mom, players(name))
+                `)
+                .not('team_a_rating', 'is', null)
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('historyGamesBody');
+            tbody.innerHTML = '';
+
+            if (error) return console.error(error);
+            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">완료된 경기 기록이 없습니다.</td></tr>';
+
+            data.forEach(game => {
+                const tr = document.createElement('tr');
+                const isFriendly = game.match_days.match_type === '교류전';
+                const vsText = isFriendly ? `우리팀 ${game.team_a_score} : ${game.team_b_score} 상대` 
+                                          : `A팀 ${game.team_a_score} : ${game.team_b_score} B팀`;
+                const ratingText = isFriendly ? `${game.team_a_rating}점 / -` 
+                                              : `${game.team_a_rating}점 / ${game.team_b_rating}점`;
+                
+                // MOM 찾기
+                let momName = '-';
+                const momLineup = game.game_lineups.find(l => l.is_mom === true);
+                if (momLineup && momLineup.players) momName = `⭐ ${momLineup.players.name}`;
+
+                tr.innerHTML = `
+                    <td>${game.match_days.match_date}</td>
+                    <td>${game.game_number}경기</td>
+                    <td style="font-weight:bold; color:#fff;">${vsText}</td>
+                    <td style="color:#ecc94b; font-weight:bold;">${ratingText}</td>
+                    <td style="color:#63b3ed; font-weight:bold;">${momName}</td>
+                    <td style="font-size:12px; color:#a0aec0;">${game.evaluator_name || '알수없음'}</td>
                 `;
                 tbody.appendChild(tr);
             });
