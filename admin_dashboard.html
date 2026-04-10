@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>코치진 통계 대시보드 V2</title>
+    <title>코치진 통계 대시보드 V3</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #1a202c; color: #e2e8f0; margin: 0; padding: 20px; }
         
-        /* 헤더 모바일 최적화: 줄바꿈 허용 및 텍스트 쪼개짐 방지 */
         .header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid #2d3748; padding-bottom: 15px; margin-bottom: 20px; gap: 10px; }
         .header h1 { margin: 0; color: #63b3ed; font-size: 22px; white-space: nowrap; }
         .login-info { background: #2d3748; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #ecc94b; white-space: nowrap; }
         
-        /* 탭 메뉴 모바일 최적화: 가로 스크롤 허용 */
         .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .nav-btn { background: #2d3748; color: #a0aec0; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; font-size: 13px; }
         .nav-btn.active { background: #3182ce; color: white; }
@@ -22,7 +20,6 @@
         .panel { display: none; background: #2d3748; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .panel.active { display: block; }
 
-        /* 테이블 모바일 최적화: 세로 글씨 방지 및 가로 스크롤 */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #4a5568; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid #4a5568; white-space: nowrap; font-size: 13px; }
@@ -30,11 +27,11 @@
         tr:hover { background: #4a5568; }
         
         .btn-action { background: #ecc94b; color: #744210; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-detail { background: #4a5568; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
-        /* 평가 모달 (팝업) */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; box-sizing: border-box; }
         .modal-content { background: #2d3748; padding: 20px; border-radius: 16px; width: 100%; max-width: 500px; color: white; max-height: 90vh; overflow-y: auto; }
-        .modal-title { font-size: 18px; font-weight: bold; color: #63b3ed; margin-top: 0; margin-bottom: 15px; }
+        .modal-title { font-size: 18px; font-weight: bold; color: #63b3ed; margin-top: 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         
         .game-summary { background: #1a202c; border-left: 4px solid #63b3ed; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
         .team-a-text { color: #90cdf4; font-weight: bold; }
@@ -46,6 +43,8 @@
         
         .btn-submit { background: #38a169; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .btn-close { background: transparent; color: #a0aec0; border: 1px solid #a0aec0; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-danger { background: #e53e3e; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
+        .btn-warning { background: #ecc94b; color: #744210; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
 
         .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a202c; display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         .auth-box { background: #2d3748; padding: 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 320px; }
@@ -59,7 +58,7 @@
         <div class="auth-box">
             <h2 style="color: white; margin-top: 0; font-size: 20px;">코치진 대시보드 접속</h2>
             <p style="font-size:12px; color:#a0aec0; margin-bottom: 20px;">본인의 코치 전술 코드를 입력하세요.</p>
-            <input type="password" id="adminCode" placeholder="코치진만 접속 가능">
+            <input type="password" id="adminCode" placeholder="예: wb-tactic">
             <button onclick="checkAdmin()">로그인</button>
         </div>
     </div>
@@ -129,7 +128,7 @@
                         <th>스코어 (A vs B)</th>
                         <th>평점 (A / B)</th>
                         <th>MOM</th>
-                        <th>평가 코치</th>
+                        <th>관리</th>
                     </tr>
                 </thead>
                 <tbody id="historyGamesBody">
@@ -170,14 +169,33 @@
             </div>
 
             <button class="btn-submit" onclick="submitEvaluation()">평가 완료 및 저장</button>
-            <button class="btn-close" onclick="closeModal()">취소</button>
+            <button class="btn-close" onclick="closeModal('evalModal')">취소</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <span id="historyModalTitle">과거 경기 상세</span>
+                <span id="historyEvaluator" style="font-size:12px; color:#a0aec0;"></span>
+            </div>
+            
+            <div class="game-summary" id="historySummaryBox" style="background: #1a202c;">
+                상세 정보를 불러오는 중입니다...
+            </div>
+
+            <p style="font-size:12px; color:#a0aec0; margin-bottom:15px; line-height: 1.4;">
+                * 평점/MOM/MIP 수정이 필요한 경우 <b>[평가 수정]</b>을 누르세요.<br>
+                * 스코어 및 출전 명단이 잘못된 경우 <b>[이 경기 삭제]</b> 후 현장 기입 페이지에서 새로 입력해야 합니다.
+            </p>
+
+            <button class="btn-warning" onclick="reEvaluateGame()">평가 수정</button>
+            <button class="btn-danger" onclick="deleteGame()">이 경기 삭제</button>
+            <button class="btn-close" onclick="closeModal('historyModal')">닫기</button>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // Supabase 연동 (진짜 키 입력)
-        // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -194,6 +212,8 @@
 
         let loggedInCoach = null;
         let currentEvalGameId = null;
+        let currentHistoryGameId = null;
+        let currentHistoryIsFriendly = false;
 
         function checkAdmin() {
             const code = document.getElementById('adminCode').value.trim();
@@ -277,10 +297,63 @@
                     <td style="font-weight:bold; color:#fff;">${vsText}</td>
                     <td style="color:#ecc94b; font-weight:bold;">${ratingText}</td>
                     <td style="color:#63b3ed; font-weight:bold;">${momName}</td>
-                    <td style="font-size:12px; color:#a0aec0;">${game.evaluator_name || '알수없음'}</td>
+                    <td><button class="btn-detail" onclick="openHistoryModal('${game.id}', ${isFriendly}, ${game.game_number}, '${game.evaluator_name || ''}')">상세/관리</button></td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // 공통 요약 생성 함수
+        async function buildGameSummary(gameId, isFriendly) {
+            const { data: lineups } = await supabaseClient.from('game_lineups').select('player_id, team, is_gk, players(name)').eq('game_id', gameId);
+            const { data: goals } = await supabaseClient.from('game_goals').select('scorer_id, assist_id, is_own_goal, scoring_team, players!game_goals_scorer_id_fkey(name), assist_players:players!game_goals_assist_id_fkey(name)').eq('game_id', gameId);
+
+            let strA = [], strB = [];
+            let options = '<option value="">선택 안함</option>';
+
+            if (lineups) {
+                lineups.forEach(row => {
+                    const pId = row.player_id;
+                    const pName = row.players.name;
+                    const isGk = row.is_gk ? '🧤' : '';
+                    const displayText = `${pName}${isGk}`;
+                    if (row.team === 'A') strA.push(displayText);
+                    else strB.push(displayText);
+                    options += `<option value="${pId}">${pName}</option>`;
+                });
+            }
+
+            let goalStrA = '', goalStrB = '';
+            if (goals) {
+                goals.forEach(g => {
+                    if (g.is_own_goal) {
+                        if (g.scoring_team === 'A') goalStrA += `<div style="font-size:12px; color:#a0aec0;">⚽ 자책골 (상대팀)</div>`;
+                        else goalStrB += `<div style="font-size:12px; color:#a0aec0;">⚽ 자책골 (상대팀)</div>`;
+                    } else {
+                        const scorer = g.players ? g.players.name : '';
+                        const assist = g.assist_players ? g.assist_players.name : null;
+                        const assistText = assist ? `<span style="font-size:11px; color:#718096;">(도움: ${assist})</span>` : '';
+                        const html = `<div style="font-size:12px; color:#e2e8f0;">⚽ ${scorer} ${assistText}</div>`;
+                        if (g.scoring_team === 'A') goalStrA += html;
+                        else goalStrB += html;
+                    }
+                });
+            }
+
+            let summaryHtml = `
+                <div class="team-a-text">[A팀 명단] <span style="font-weight:normal; color:#e2e8f0;">${strA.join(', ') || '없음'}</span></div>
+                <div style="margin-bottom:10px; padding-left:10px;">${goalStrA || '<span style="font-size:12px; color:#718096;">득점 없음</span>'}</div>
+            `;
+            if (!isFriendly) {
+                summaryHtml += `
+                    <div class="team-b-text">[B팀 명단] <span style="font-weight:normal; color:#e2e8f0;">${strB.join(', ') || '없음'}</span></div>
+                    <div style="padding-left:10px;">${goalStrB || '<span style="font-size:12px; color:#718096;">득점 없음</span>'}</div>
+                `;
+            } else {
+                summaryHtml += `<div class="team-b-text">[B팀 명단] <span style="font-weight:normal; color:#718096;">상대팀 생략</span></div>`;
+            }
+
+            return { summaryHtml, options };
         }
 
         async function openEvalModal(gameId, isFriendly, gameNumber) {
@@ -290,56 +363,50 @@
             document.getElementById('ratingBGroup').style.display = isFriendly ? 'none' : 'block';
             document.getElementById('gameSummaryBox').innerHTML = '데이터를 불러오는 중...';
 
-            const { data: lineups, error: lErr } = await supabaseClient
-                .from('game_lineups')
-                .select('player_id, team, is_gk, players(name)')
-                .eq('game_id', gameId);
-
-            const { data: goals, error: gErr } = await supabaseClient
-                .from('game_goals')
-                .select('scorer_id, is_own_goal')
-                .eq('game_id', gameId);
-
-            if (lErr || gErr) return console.error("로딩 에러");
-
-            const goalCounts = {};
-            goals.forEach(g => {
-                if (!g.is_own_goal && g.scorer_id) {
-                    goalCounts[g.scorer_id] = (goalCounts[g.scorer_id] || 0) + 1;
-                }
-            });
-
-            let strA = [], strB = [];
-            let options = '<option value="">선택 안함</option>';
-
-            lineups.forEach(row => {
-                const pId = row.player_id;
-                const pName = row.players.name;
-                const isGk = row.is_gk ? '🧤' : '';
-                const goalStr = goalCounts[pId] ? `(⚽x${goalCounts[pId]})` : '';
-                
-                const displayText = `${pName}${isGk}${goalStr}`;
-                if (row.team === 'A') strA.push(displayText);
-                else strB.push(displayText);
-
-                options += `<option value="${pId}">${pName}</option>`;
-            });
-
-            let summaryHtml = `<div class="team-a-text">[A팀] ${strA.join(', ') || '명단 없음'}</div>`;
-            if (!isFriendly) {
-                summaryHtml += `<div class="team-b-text" style="margin-top:8px;">[B팀] ${strB.join(', ') || '명단 없음'}</div>`;
-            }
+            const { summaryHtml, options } = await buildGameSummary(gameId, isFriendly);
             document.getElementById('gameSummaryBox').innerHTML = summaryHtml;
-
             document.getElementById('selectMOM').innerHTML = options;
             document.getElementById('selectMIP1').innerHTML = options;
             document.getElementById('selectMIP2').innerHTML = options;
             document.getElementById('selectMIP3').innerHTML = options;
         }
 
-        function closeModal() {
-            document.getElementById('evalModal').style.display = 'none';
-            currentEvalGameId = null;
+        async function openHistoryModal(gameId, isFriendly, gameNumber, evaluator) {
+            currentHistoryGameId = gameId;
+            currentHistoryIsFriendly = isFriendly;
+            document.getElementById('historyModal').style.display = 'flex';
+            document.getElementById('historyModalTitle').innerText = `${gameNumber}경기 상세 기록`;
+            document.getElementById('historyEvaluator').innerText = evaluator ? `(평가: ${evaluator})` : '';
+            document.getElementById('historySummaryBox').innerHTML = '상세 정보를 불러오는 중...';
+
+            const { summaryHtml } = await buildGameSummary(gameId, isFriendly);
+            document.getElementById('historySummaryBox').innerHTML = summaryHtml;
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function reEvaluateGame() {
+            closeModal('historyModal');
+            // 기존 데이터 초기화 로직 (선택적 구현 가능, 현재는 빈 폼으로 엽니다)
+            openEvalModal(currentHistoryGameId, currentHistoryIsFriendly, "재평가");
+        }
+
+        async function deleteGame() {
+            if (!confirm("정말 이 경기를 삭제하시겠습니까? 관련된 라인업과 득점 기록이 모두 삭제되며 복구할 수 없습니다.")) return;
+            
+            const { error } = await supabaseClient.from('games').delete().eq('id', currentHistoryGameId);
+            
+            if (error) {
+                alert("삭제 실패: " + error.message);
+            } else {
+                alert("경기가 완전히 삭제되었습니다.");
+                closeModal('historyModal');
+                loadPendingGames();
+                loadHistoryGames();
+                loadStats();
+            }
         }
 
         async function submitEvaluation() {
@@ -355,9 +422,10 @@
             const mipIds = [...new Set([mip1, mip2, mip3].filter(Boolean))];
 
             try {
-                await supabaseClient.from('games')
-                    .update({ team_a_rating: rA, team_b_rating: rB, evaluator_name: loggedInCoach })
-                    .eq('id', currentEvalGameId);
+                await supabaseClient.from('games').update({ team_a_rating: rA, team_b_rating: rB, evaluator_name: loggedInCoach }).eq('id', currentEvalGameId);
+
+                // 기존 평가 초기화 (재평가를 위함)
+                await supabaseClient.from('game_lineups').update({ is_mom: false, is_mip: false }).eq('game_id', currentEvalGameId);
 
                 if (momId) {
                     await supabaseClient.from('game_lineups').update({ is_mom: true }).eq('game_id', currentEvalGameId).eq('player_id', momId);
@@ -368,10 +436,10 @@
                 }
 
                 alert('평가가 성공적으로 반영되었습니다!');
-                closeModal();
+                closeModal('evalModal');
                 loadPendingGames(); 
-                loadStats(); 
                 loadHistoryGames();
+                loadStats(); 
 
             } catch (error) {
                 alert('업데이트 중 오류 발생: ' + error.message);
@@ -412,7 +480,6 @@
             
             statsArray.forEach((s, idx) => {
                 if (s.apps === 0) return; 
-
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#ecc94b;">${idx + 1}</td>
