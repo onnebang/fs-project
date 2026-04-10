@@ -77,11 +77,11 @@
     <div class="card">
         <div class="title">🏃 2. 출전 명단 (터치하여 선택)</div>
         
-        <div style="margin-bottom: 20px; padding: 15px; background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; gap: 10px; align-items: center;">
-            <label style="margin-bottom:0; font-size:14px; color:#4a5568;">👤 용병 추가:</label>
-            <input type="text" id="guestName" placeholder="이름 입력" style="width:120px; padding:8px;">
-            <button onclick="addGuestPlayer('A')" style="padding: 8px 15px; border: none; border-radius: 8px; background: #63b3ed; color: white; font-weight:bold; cursor:pointer;">A팀 추가</button>
-            <button onclick="addGuestPlayer('B')" style="padding: 8px 15px; border: none; border-radius: 8px; background: #fc8181; color: white; font-weight:bold; cursor:pointer;">B팀 추가</button>
+        <div style="margin-bottom: 20px; padding: 15px; background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; gap: 8px; align-items: center; width: 100%; box-sizing: border-box;">
+            <label style="margin-bottom:0; font-size:14px; color:#4a5568; white-space: nowrap; flex-shrink: 0;">용병 추가:</label>
+            <input type="text" id="guestName" placeholder="이름 입력" style="flex: 1; min-width: 0; padding:8px;">
+            <button onclick="addGuestPlayer('A')" style="padding: 8px 12px; border: none; border-radius: 8px; background: #63b3ed; color: white; font-weight:bold; cursor:pointer; white-space: nowrap; flex-shrink: 0;">A팀 추가</button>
+            <button onclick="addGuestPlayer('B')" style="padding: 8px 12px; border: none; border-radius: 8px; background: #fc8181; color: white; font-weight:bold; cursor:pointer; white-space: nowrap; flex-shrink: 0;">B팀 추가</button>
         </div>
 
         <p style="font-size: 12px; color: #718096; margin-top:-10px;">* 골키퍼를 지정하려면 선택된 선수를 한 번 더 터치하세요.</p>
