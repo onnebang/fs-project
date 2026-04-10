@@ -10,7 +10,6 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f0f4f8; color: #1a202c; margin: 0; padding: 0; padding-bottom: 60px; }
         
-        /* 1. 상단 네비게이션 & 히어로 섹션 */
         .top-nav { display: flex; align-items: center; padding: 15px 20px; color: white; position: absolute; top: 0; width: 100%; box-sizing: border-box; z-index: 10; }
         .back-btn { color: white; text-decoration: none; font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.2); width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; border-radius: 50%; backdrop-filter: blur(5px); }
         
@@ -23,20 +22,16 @@
 
         .container { max-width: 800px; margin: -20px auto 0 auto; padding: 0 15px; position: relative; z-index: 5; }
 
-        /* 2. 핵심 스탯 보드 (3x2 그리드) */
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: white; padding: 15px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .stat-val { font-size: 22px; font-weight: 900; color: #2d3748; margin-bottom: 2px; }
         .stat-label { font-size: 11px; font-weight: 800; color: #a0aec0; text-transform: uppercase; }
 
-        /* 3. 섹션 카드 공통 */
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card-title { font-size: 16px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; }
 
-        /* 4. 레이더 차트 컨테이너 */
         .chart-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; aspect-ratio: 1 / 1; }
 
-        /* 5. 인물 관계도 (시너지) */
         .relation-item { display: flex; align-items: center; padding: 12px; border-radius: 12px; background: #f8fafc; margin-bottom: 10px; border: 1px solid #edf2f7; }
         .relation-icon { font-size: 24px; margin-right: 15px; width: 30px; text-align: center; }
         .relation-info { flex: 1; }
@@ -47,7 +42,6 @@
         .stat-bad { color: #e53e3e; }
         .stat-neutral { color: #3182ce; }
 
-        /* 6. 최근 경기 타임라인 */
         .timeline { position: relative; padding-left: 20px; margin-top: 10px; }
         .timeline::before { content: ''; position: absolute; top: 0; left: 6px; width: 2px; height: 100%; background: #e2e8f0; }
         .tl-item { position: relative; margin-bottom: 20px; }
@@ -95,7 +89,7 @@
         };
 
         async function loadPlayerProfile(targetName) {
-            // 1. 필요한 모든 데이터 가져오기
+            // 1. 데이터 가져오기
             const [playersRes, gamesRes, lineupsRes, goalsRes] = await Promise.all([
                 supabaseClient.from('players').select('*'),
                 supabaseClient.from('games').select('*, match_days(match_date, match_type, opponent)').order('created_at', { ascending: false }),
@@ -103,28 +97,30 @@
                 supabaseClient.from('game_goals').select('*')
             ]);
 
-            const targetPlayer = playersRes.data.find(p => p.name === targetName);
             if (playersRes.error || gamesRes.error || lineupsRes.error || goalsRes.error) {
                 return document.getElementById('app').innerHTML = '<div class="loading" style="color:#e53e3e;">데이터 로딩 중 오류가 발생했습니다.</div>';
             }
-            const gamesData = gamesRes.data; // 🔥 이 줄을 추가해 주세요!
+
+            // 🔥 gamesData 변수 할당 추가 (버그 해결 완료)
+            const gamesData = gamesRes.data; 
 
             const targetPlayer = playersRes.data.find(p => p.name === targetName);
             if (!targetPlayer) {
                 return document.getElementById('app').innerHTML = '<div class="loading" style="color:#e53e3e;">등록되지 않은 선수입니다.</div>';
             }
+            
             const targetId = targetPlayer.id;
             const playersMap = {};
             playersRes.data.forEach(p => playersMap[p.id] = p.name);
 
-            // 2. 전체 선수 스탯 연산 (상대 평가 및 백분위 계산용)
+            // 2. 전체 스탯 연산
             const stats = {};
             playersRes.data.forEach(p => {
                 stats[p.id] = { id: p.id, name: p.name, apps: 0, wins: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, mom: 0, mip: 0 };
             });
 
             const gameTeams = {}; 
-            const myGames = []; // 타임라인용
+            const myGames = []; 
 
             lineupsRes.data.forEach(l => {
                 const pStat = stats[l.player_id];
@@ -144,7 +140,6 @@
                     if (!gameTeams[l.game_id]) gameTeams[l.game_id] = { A: [], B: [], winner: winner, game: game };
                     if (gameTeams[l.game_id][l.team]) gameTeams[l.game_id][l.team].push(l.player_id);
 
-                    // 타임라인용 데이터 수집
                     if (l.player_id === targetId) {
                         myGames.push({
                             gameInfo: game,
@@ -163,7 +158,6 @@
                 if (!g.is_own_goal && g.scorer_id && stats[g.scorer_id]) stats[g.scorer_id].goals += 1;
                 if (g.assist_id && stats[g.assist_id]) stats[g.assist_id].assists += 1;
 
-                // 타임라인용 내 공격포인트 업데이트
                 if (g.scorer_id === targetId || g.assist_id === targetId) {
                     const myGame = myGames.find(mg => mg.gameInfo.id === g.game_id);
                     if (myGame) {
@@ -173,46 +167,32 @@
                 }
             });
 
-            // 3. 내 스탯 추출 및 계산
+            // 3. 내 스탯 계산
             const myStat = stats[targetId];
             if (myStat.apps === 0) {
                 return document.getElementById('app').innerHTML = `
                     <div class="top-nav"><a href="index.html" class="back-btn">←</a></div>
-                    <div class="loading">아직 ${targetName} 선수의 출전 기록이 없습니다.</div>
+                    <div class="loading" style="padding-top:100px;">아직 ${targetName} 선수의 출전 기록이 없습니다.</div>
                 `;
             }
 
             const points = myStat.goals + myStat.assists;
             const winRate = Math.round((myStat.wins / myStat.apps) * 100);
             const p90 = myStat.playTime > 0 ? ((myStat.goals / myStat.playTime) * 90).toFixed(2) : "0.00";
-            const avgGoals = (myStat.goals / myStat.apps).toFixed(2);
-            const avgAssists = (myStat.assists / myStat.apps).toFixed(2);
-            const avgConceded = (myStat.conceded / myStat.apps).toFixed(2);
 
-            // 4. 육각형 차트 (Radar) 능력치 백분위 산출 로직
-            const activePlayers = Object.values(stats).filter(s => s.apps > 0);
-            const totalTeamGames = gamesData.length; // 팀 전체 경기수
-
-            function getScore(value, maxExpected) {
-                return Math.min(100, Math.round((value / maxExpected) * 100));
-            }
+            // 4. 육각형 차트 연산
+            const totalTeamGames = gamesData.length; 
+            function getScore(value, maxExpected) { return Math.min(100, Math.round((value / maxExpected) * 100)); }
             
-            // 능력치 1: 결정력 (최대 2골/경기 기준)
             const scoreFinishing = getScore(myStat.goals / myStat.apps, 2.0);
-            // 능력치 2: 이타성 (최대 1.5도움/경기 기준)
             const scorePlaymaking = getScore(myStat.assists / myStat.apps, 1.5);
-            // 능력치 3: 승리요정 (승률 그대로)
             const scoreWinning = winRate;
-            // 능력치 4: 수비력 (적게 먹힐수록 높음. 평균 5실점 기준을 0점, 0실점을 100점)
             const avgConc = myStat.conceded / myStat.apps;
             const scoreDefense = Math.max(0, 100 - (avgConc * 20)); 
-            // 능력치 5: 성실함 (팀 전체 경기 중 출전 비율)
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
-            // 능력치 6: 스타성 (MOM/MIP 획득 빈도)
-            const starPower = (myStat.mom * 2 + myStat.mip) / myStat.apps; // MOM에 가중치 2
-            const scoreStar = getScore(starPower, 0.5); // 경기당 0.5회 받으면 만점
+            const starPower = (myStat.mom * 2 + myStat.mip) / myStat.apps; 
+            const scoreStar = getScore(starPower, 0.5); 
 
-            // 5. 타이틀 뱃지 분석
             let badgesHtml = '';
             if (scoreFinishing >= 80) badgesHtml += '<span class="badge">🔥 골잡이</span>';
             if (scorePlaymaking >= 80) badgesHtml += '<span class="badge">🤝 패스마스터</span>';
@@ -221,7 +201,7 @@
             if (winRate >= 60) badgesHtml += '<span class="badge">🍀 승리요정</span>';
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
 
-            // 6. 개인 시너지 분석 (나와 함께한 사람들)
+            // 5. 관계도
             const duoStats = {}; 
             const enemyStats = {}; 
             const assistStats = {}; 
@@ -237,7 +217,6 @@
                 else if (teamB.includes(targetId)) { myTeamArr = teamB; enemyTeamArr = teamA; myTeamWinner = 'B'; }
 
                 if (myTeamArr) {
-                    // 나의 단짝
                     myTeamArr.forEach(id => {
                         if(id !== targetId) {
                             if(!duoStats[id]) duoStats[id] = { games:0, wins:0 };
@@ -245,21 +224,20 @@
                             if (winner === myTeamWinner) duoStats[id].wins++;
                         }
                     });
-                    // 나의 천적 (상대팀)
                     enemyTeamArr.forEach(id => {
                         if(!enemyStats[id]) enemyStats[id] = { games:0, losses:0 };
                         enemyStats[id].games++;
-                        if (winner !== myTeamWinner && winner !== 'DRAW') enemyStats[id].losses++; // 내가 진 경우
+                        if (winner !== myTeamWinner && winner !== 'DRAW') enemyStats[id].losses++;
                     });
                 }
             }
 
             goalsRes.data.forEach(g => {
                 if (g.scorer_id === targetId && g.assist_id) {
-                    assistStats[g.assist_id] = (assistStats[g.assist_id] || 0) + 1; // 나에게 패스한 사람
+                    assistStats[g.assist_id] = (assistStats[g.assist_id] || 0) + 1; 
                 }
                 if (g.assist_id === targetId && g.scorer_id && !g.is_own_goal) {
-                    assistStats[g.scorer_id] = (assistStats[g.scorer_id] || 0) + 1; // 내가 패스한 사람
+                    assistStats[g.scorer_id] = (assistStats[g.scorer_id] || 0) + 1; 
                 }
             });
 
@@ -283,12 +261,12 @@
             const worstEnemy = getTopRelation(enemyStats, true, 'losses');
             const bestPartner = getTopRelation(assistStats, false, null);
 
-            // 7. 최근 경기 타임라인 렌더링
+            // 6. 타임라인
             let timelineHtml = '';
             myGames.slice(0, 5).forEach(mg => {
                 const isFriendly = mg.gameInfo.match_days.match_type === '교류전';
                 const date = mg.gameInfo.match_days.match_date;
-                const scoreTxt = isFriendly ? `${mg.gameInfo.team_a_score} : ${mg.gameInfo.team_b_score}` : `${mg.gameInfo.team_a_score} : ${mg.gameInfo.team_b_score}`;
+                const scoreTxt = `${mg.gameInfo.team_a_score} : ${mg.gameInfo.team_b_score}`;
                 
                 let resultClass = 'draw', resultText = '무승부';
                 if (mg.result === 'win') { resultClass = 'win'; resultText = '승리'; }
@@ -318,11 +296,8 @@
                 `;
             });
 
-            // ==========================================
-            // 전체 UI 렌더링
-            // ==========================================
-            const app = document.getElementById('app');
-            app.innerHTML = `
+            // 7. UI 조립
+            document.getElementById('app').innerHTML = `
                 <div class="top-nav">
                     <a href="index.html" class="back-btn">←</a>
                 </div>
@@ -353,7 +328,7 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-title">🤝 나의 인물 관계도 (시너지)</div>
+                        <div class="card-title">🤝 나의 인물 관계도 (최소 2경기)</div>
                         
                         <div class="relation-item">
                             <div class="relation-icon">🔥</div>
@@ -376,7 +351,7 @@
                         <div class="relation-item" style="margin-bottom:0;">
                             <div class="relation-icon">📦</div>
                             <div class="relation-info">
-                                <div class="relation-title">영혼의 단짝 (합작 골 수)</div>
+                                <div class="relation-title">영혼의 단짝 (단일 최다 합작)</div>
                                 <div class="relation-target">${bestPartner ? playersMap[bestPartner.id] : '데이터 부족'}</div>
                             </div>
                             <div class="relation-stat stat-neutral">${bestPartner ? `${bestPartner.val}골` : '-'}</div>
@@ -390,9 +365,7 @@
                 </div>
             `;
 
-            // ==========================================
-            // Chart.js 레이더 차트 그리기
-            // ==========================================
+            // 레이더 차트 그리기
             const ctx = document.getElementById('radarChart').getContext('2d');
             new Chart(ctx, {
                 type: 'radar',
