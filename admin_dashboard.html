@@ -9,54 +9,57 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #1a202c; color: #e2e8f0; margin: 0; padding: 20px; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2d3748; padding-bottom: 20px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #63b3ed; }
-        .login-info { background: #2d3748; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #ecc94b; }
+        /* 헤더 모바일 최적화: 줄바꿈 허용 및 텍스트 쪼개짐 방지 */
+        .header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid #2d3748; padding-bottom: 15px; margin-bottom: 20px; gap: 10px; }
+        .header h1 { margin: 0; color: #63b3ed; font-size: 22px; white-space: nowrap; }
+        .login-info { background: #2d3748; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #ecc94b; white-space: nowrap; }
         
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .nav-btn { background: #2d3748; color: #a0aec0; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        /* 탭 메뉴 모바일 최적화: 가로 스크롤 허용 */
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .nav-btn { background: #2d3748; color: #a0aec0; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; font-size: 13px; }
         .nav-btn.active { background: #3182ce; color: white; }
 
         .panel { display: none; background: #2d3748; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .panel.active { display: block; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #4a5568; }
-        th { background: #1a202c; color: #a0aec0; font-size: 13px; }
+        /* 테이블 모바일 최적화: 세로 글씨 방지 및 가로 스크롤 */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #4a5568; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #4a5568; white-space: nowrap; font-size: 13px; }
+        th { background: #1a202c; color: #a0aec0; font-weight: 800; }
         tr:hover { background: #4a5568; }
         
-        .btn-action { background: #ecc94b; color: #744210; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-action { background: #ecc94b; color: #744210; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
         /* 평가 모달 (팝업) */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; box-sizing: border-box; }
-        .modal-content { background: #2d3748; padding: 30px; border-radius: 16px; width: 100%; max-width: 500px; color: white; max-height: 90vh; overflow-y: auto; }
-        .modal-title { font-size: 20px; font-weight: bold; color: #63b3ed; margin-top: 0; margin-bottom: 15px; }
+        .modal-content { background: #2d3748; padding: 20px; border-radius: 16px; width: 100%; max-width: 500px; color: white; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 18px; font-weight: bold; color: #63b3ed; margin-top: 0; margin-bottom: 15px; }
         
-        /* [추가] 경기 요약 리포트 UI */
-        .game-summary { background: #1a202c; border-left: 4px solid #63b3ed; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
+        .game-summary { background: #1a202c; border-left: 4px solid #63b3ed; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
         .team-a-text { color: #90cdf4; font-weight: bold; }
         .team-b-text { color: #feb2b2; font-weight: bold; }
         
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 13px; color: #a0aec0; margin-bottom: 5px; }
-        .form-group select, .form-group input { width: 100%; padding: 10px; background: #1a202c; border: 1px solid #4a5568; color: white; border-radius: 8px; box-sizing: border-box; }
+        .form-group select, .form-group input { width: 100%; padding: 10px; background: #1a202c; border: 1px solid #4a5568; color: white; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         
-        .btn-submit { background: #38a169; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-submit { background: #38a169; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .btn-close { background: transparent; color: #a0aec0; border: 1px solid #a0aec0; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
-        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a202c; display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .auth-box { background: #2d3748; padding: 30px; border-radius: 12px; text-align: center; }
-        .auth-box input { padding: 10px; border-radius: 8px; border: none; margin-bottom: 10px; width: 200px; text-align: center; font-weight: bold; }
-        .auth-box button { padding: 10px 20px; background: #3182ce; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a202c; display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        .auth-box { background: #2d3748; padding: 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 320px; }
+        .auth-box input { padding: 12px; border-radius: 8px; border: none; margin-bottom: 15px; width: 100%; box-sizing: border-box; text-align: center; font-weight: bold; font-size: 15px; }
+        .auth-box button { padding: 12px; width: 100%; background: #3182ce; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-box">
-            <h2 style="color: white; margin-top: 0;">코치진 대시보드 접속</h2>
-            <p style="font-size:12px; color:#a0aec0;">본인의 코치 전술 코드를 입력하세요.</p>
-            <input type="password" id="adminCode" placeholder=" "><br>
+            <h2 style="color: white; margin-top: 0; font-size: 20px;">코치진 대시보드 접속</h2>
+            <p style="font-size:12px; color:#a0aec0; margin-bottom: 20px;">본인의 코치 전술 코드를 입력하세요.</p>
+            <input type="password" id="adminCode" placeholder="예: wb-tactic">
             <button onclick="checkAdmin()">로그인</button>
         </div>
     </div>
@@ -73,9 +76,9 @@
     </div>
 
     <div id="panel-evaluation" class="panel active">
-        <h3 style="margin-top: 0; color: #ecc94b;">평가 및 시상 대기 목록</h3>
-        <p style="font-size: 13px; color: #a0aec0;">코치진의 합의된 평점과 MOM/MIP를 입력해 주세요.</p>
-        <div style="overflow-x: auto;">
+        <h3 style="margin-top: 0; color: #ecc94b; font-size: 16px;">평가 및 시상 대기 목록</h3>
+        <p style="font-size: 12px; color: #a0aec0; margin-bottom: 15px;">코치진의 합의된 평점과 MOM/MIP를 입력해 주세요.</p>
+        <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
@@ -87,20 +90,20 @@
                     </tr>
                 </thead>
                 <tbody id="pendingGamesBody">
-                    <tr><td colspan="5" style="text-align: center;">데이터를 불러오는 중...</td></tr>
+                    <tr><td colspan="5">데이터를 불러오는 중...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <div id="panel-dashboard" class="panel">
-        <h3 style="margin-top: 0; color: #63b3ed;">선수별 누적 스탯 (전체 기간)</h3>
-        <div style="overflow-x: auto;">
+        <h3 style="margin-top: 0; color: #63b3ed; font-size: 16px;">선수별 누적 스탯 (전체 기간)</h3>
+        <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
                         <th>순위</th>
-                        <th>선수명</th>
+                        <th style="text-align: left;">선수명</th>
                         <th>출전</th>
                         <th>⚽ 득점</th>
                         <th>👟 도움</th>
@@ -109,16 +112,15 @@
                     </tr>
                 </thead>
                 <tbody id="statsBody">
-                    <tr><td colspan="7" style="text-align: center;">데이터를 계산하는 중...</td></tr>
+                    <tr><td colspan="7">데이터를 계산하는 중...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-
     <div id="panel-history" class="panel">
-        <h3 style="margin-top: 0; color: #63b3ed;">과거 경기 결과 및 코치진 평점</h3>
-        <div style="overflow-x: auto;">
+        <h3 style="margin-top: 0; color: #63b3ed; font-size: 16px;">과거 경기 결과 및 코치진 평점</h3>
+        <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
@@ -131,12 +133,12 @@
                     </tr>
                 </thead>
                 <tbody id="historyGamesBody">
-                    <tr><td colspan="6" style="text-align: center;">데이터를 불러오는 중...</td></tr>
+                    <tr><td colspan="6">데이터를 불러오는 중...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <div class="modal-overlay" id="evalModal">
         <div class="modal-content">
             <div class="modal-title" id="evalModalTitle">경기 복기 및 평가</div>
@@ -179,7 +181,7 @@
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        
+
         const coachAuth = {
             'mh': '민호 코치',
             'jh': '준하 코치',
@@ -187,7 +189,7 @@
             'kp': '경표 코치',
             'gm': '경목 코치',
             'wo': '원언 코치',
-            'master_fs': '마스터 관리자'
+            'master-fs': '마스터 관리자'
         };
 
         let loggedInCoach = null;
@@ -214,9 +216,6 @@
             event.target.classList.add('active');
         }
 
-        // ==========================================
-        // 1. 평가 대기 경기 불러오기
-        // ==========================================
         async function loadPendingGames() {
             const { data, error } = await supabaseClient
                 .from('games')
@@ -228,7 +227,7 @@
             tbody.innerHTML = '';
 
             if (error) return console.error(error);
-            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">평가 대기 중인 경기가 없습니다!</td></tr>';
+            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="5">평가 대기 중인 경기가 없습니다!</td></tr>';
 
             data.forEach(game => {
                 const tr = document.createElement('tr');
@@ -247,9 +246,43 @@
             });
         }
 
-        // ==========================================
-        // 2. 평가 모달창 & 경기 요약(Context) 세팅
-        // ==========================================
+        async function loadHistoryGames() {
+            const { data, error } = await supabaseClient
+                .from('games')
+                .select('*, match_days(match_date, match_type, opponent), game_lineups(player_id, is_mom, players(name))')
+                .not('team_a_rating', 'is', null)
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('historyGamesBody');
+            tbody.innerHTML = '';
+
+            if (error) return console.error(error);
+            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="6">완료된 경기 기록이 없습니다.</td></tr>';
+
+            data.forEach(game => {
+                const tr = document.createElement('tr');
+                const isFriendly = game.match_days.match_type === '교류전';
+                const vsText = isFriendly ? `우리팀 ${game.team_a_score} : ${game.team_b_score} 상대` 
+                                          : `A팀 ${game.team_a_score} : ${game.team_b_score} B팀`;
+                const ratingText = isFriendly ? `${game.team_a_rating}점 / -` 
+                                              : `${game.team_a_rating}점 / ${game.team_b_rating}점`;
+                
+                let momName = '-';
+                const momLineup = game.game_lineups.find(l => l.is_mom === true);
+                if (momLineup && momLineup.players) momName = `⭐ ${momLineup.players.name}`;
+
+                tr.innerHTML = `
+                    <td>${game.match_days.match_date}</td>
+                    <td>${game.game_number}경기</td>
+                    <td style="font-weight:bold; color:#fff;">${vsText}</td>
+                    <td style="color:#ecc94b; font-weight:bold;">${ratingText}</td>
+                    <td style="color:#63b3ed; font-weight:bold;">${momName}</td>
+                    <td style="font-size:12px; color:#a0aec0;">${game.evaluator_name || '알수없음'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         async function openEvalModal(gameId, isFriendly, gameNumber) {
             currentEvalGameId = gameId;
             document.getElementById('evalModal').style.display = 'flex';
@@ -257,13 +290,11 @@
             document.getElementById('ratingBGroup').style.display = isFriendly ? 'none' : 'block';
             document.getElementById('gameSummaryBox').innerHTML = '데이터를 불러오는 중...';
 
-            // 1. 출전 명단 가져오기
             const { data: lineups, error: lErr } = await supabaseClient
                 .from('game_lineups')
                 .select('player_id, team, is_gk, players(name)')
                 .eq('game_id', gameId);
 
-            // 2. 득점 정보 가져오기 (자책골 제외하고 득점자 파악용)
             const { data: goals, error: gErr } = await supabaseClient
                 .from('game_goals')
                 .select('scorer_id, is_own_goal')
@@ -271,7 +302,6 @@
 
             if (lErr || gErr) return console.error("로딩 에러");
 
-            // 득점자 카운트 계산
             const goalCounts = {};
             goals.forEach(g => {
                 if (!g.is_own_goal && g.scorer_id) {
@@ -279,7 +309,6 @@
                 }
             });
 
-            // A팀 B팀 명단 분류 및 텍스트화
             let strA = [], strB = [];
             let options = '<option value="">선택 안함</option>';
 
@@ -296,14 +325,12 @@
                 options += `<option value="${pId}">${pName}</option>`;
             });
 
-            // 요약 리포트 HTML 조립
             let summaryHtml = `<div class="team-a-text">[A팀] ${strA.join(', ') || '명단 없음'}</div>`;
             if (!isFriendly) {
                 summaryHtml += `<div class="team-b-text" style="margin-top:8px;">[B팀] ${strB.join(', ') || '명단 없음'}</div>`;
             }
             document.getElementById('gameSummaryBox').innerHTML = summaryHtml;
 
-            // 드롭다운 세팅
             document.getElementById('selectMOM').innerHTML = options;
             document.getElementById('selectMIP1').innerHTML = options;
             document.getElementById('selectMIP2').innerHTML = options;
@@ -315,9 +342,6 @@
             currentEvalGameId = null;
         }
 
-        // ==========================================
-        // 3. 평가 데이터 서버로 업데이트하기 (MIP 다중 선택 반영)
-        // ==========================================
         async function submitEvaluation() {
             if (!currentEvalGameId) return;
             
@@ -325,24 +349,20 @@
             const rB = document.getElementById('ratingBGroup').style.display === 'none' ? null : parseFloat(document.getElementById('ratingB').value);
             const momId = document.getElementById('selectMOM').value;
             
-            // MIP 3명 수집 및 중복 제거
             const mip1 = document.getElementById('selectMIP1').value;
             const mip2 = document.getElementById('selectMIP2').value;
             const mip3 = document.getElementById('selectMIP3').value;
             const mipIds = [...new Set([mip1, mip2, mip3].filter(Boolean))];
 
             try {
-                // 1. games 테이블에 평점 및 "누가 평가했는지" 업데이트
                 await supabaseClient.from('games')
                     .update({ team_a_rating: rA, team_b_rating: rB, evaluator_name: loggedInCoach })
                     .eq('id', currentEvalGameId);
 
-                // 2. MOM 등록
                 if (momId) {
                     await supabaseClient.from('game_lineups').update({ is_mom: true }).eq('game_id', currentEvalGameId).eq('player_id', momId);
                 }
 
-                // 3. MIP 등록 (in 쿼리를 사용하여 배열 안의 ID들을 한 번에 업데이트)
                 if (mipIds.length > 0) {
                     await supabaseClient.from('game_lineups').update({ is_mip: true }).eq('game_id', currentEvalGameId).in('player_id', mipIds);
                 }
@@ -351,15 +371,13 @@
                 closeModal();
                 loadPendingGames(); 
                 loadStats(); 
+                loadHistoryGames();
 
             } catch (error) {
                 alert('업데이트 중 오류 발생: ' + error.message);
             }
         }
 
-        // ==========================================
-        // 4. 전체 통계 리더보드 계산
-        // ==========================================
         async function loadStats() {
             const { data: players } = await supabaseClient.from('players').select('id, name').eq('is_guest', false);
             const { data: lineups } = await supabaseClient.from('game_lineups').select('player_id, is_mom, is_mip');
@@ -398,56 +416,12 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#ecc94b;">${idx + 1}</td>
-                    <td style="font-weight:bold;">${s.name}</td>
+                    <td style="font-weight:bold; text-align: left;">${s.name}</td>
                     <td>${s.apps}</td>
                     <td style="color:#63b3ed; font-weight:bold;">${s.goals}</td>
                     <td style="color:#63b3ed;">${s.assists}</td>
                     <td style="color:#f6e05e;">${s.mom}</td>
                     <td style="color:#fc8181;">${s.mip}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // 5. 완료된(평가된) 경기 불러오기
-        async function loadHistoryGames() {
-            // team_a_rating이 null이 아닌(평가 완료된) 경기들만 불러옵니다.
-            const { data, error } = await supabaseClient
-                .from('games')
-                .select(`
-                    *, 
-                    match_days(match_date, match_type, opponent),
-                    game_lineups(player_id, is_mom, players(name))
-                `)
-                .not('team_a_rating', 'is', null)
-                .order('created_at', { ascending: false });
-
-            const tbody = document.getElementById('historyGamesBody');
-            tbody.innerHTML = '';
-
-            if (error) return console.error(error);
-            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">완료된 경기 기록이 없습니다.</td></tr>';
-
-            data.forEach(game => {
-                const tr = document.createElement('tr');
-                const isFriendly = game.match_days.match_type === '교류전';
-                const vsText = isFriendly ? `우리팀 ${game.team_a_score} : ${game.team_b_score} 상대` 
-                                          : `A팀 ${game.team_a_score} : ${game.team_b_score} B팀`;
-                const ratingText = isFriendly ? `${game.team_a_rating}점 / -` 
-                                              : `${game.team_a_rating}점 / ${game.team_b_rating}점`;
-                
-                // MOM 찾기
-                let momName = '-';
-                const momLineup = game.game_lineups.find(l => l.is_mom === true);
-                if (momLineup && momLineup.players) momName = `⭐ ${momLineup.players.name}`;
-
-                tr.innerHTML = `
-                    <td>${game.match_days.match_date}</td>
-                    <td>${game.game_number}경기</td>
-                    <td style="font-weight:bold; color:#fff;">${vsText}</td>
-                    <td style="color:#ecc94b; font-weight:bold;">${ratingText}</td>
-                    <td style="color:#63b3ed; font-weight:bold;">${momName}</td>
-                    <td style="font-size:12px; color:#a0aec0;">${game.evaluator_name || '알수없음'}</td>
                 `;
                 tbody.appendChild(tr);
             });
