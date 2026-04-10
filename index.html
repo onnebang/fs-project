@@ -9,25 +9,23 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f0f4f8; color: #1a202c; margin: 0; padding: 0; padding-bottom: 60px; }
         
-        .header { background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%); color: white; padding: 30px 20px 40px 20px; text-align: center; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        /* [개선 1] 헤더 및 버튼 레이아웃 구조 변경 (겹침 방지) */
+        .header { background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%); color: white; padding: 15px 20px 40px 20px; text-align: center; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
+        
+        .admin-nav { display: flex; justify-content: flex-end; width: 100%; gap: 8px; margin-bottom: 10px; }
+        .admin-nav a { text-decoration: none; color: #1a365d; font-size: 12px; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 8px; font-weight: 900; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .admin-nav a:hover { background: white; transform: translateY(-2px); }
+
         .header h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
         .header p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.8; }
-        
-        /* 상단 관리자 네비게이션 가시성 및 디자인 개선 */
-        .admin-nav { position: absolute; top: 25px; /* 타이틀 디자인과 겹치지 않도록 아래로 내림 */ right: 15px; display: flex; gap: 10px; z-index: 100; /* 헤더보다 위에 위치 */ }
-        .admin-nav a { text-decoration: none; color: #1a365d; /* 어두운 색으로 변경하여 대비 높임 */ font-size: 13px; /* 가독성을 위해 크기 조절 */ background: rgba(255,255,255,0.95); padding: 6px 12px; /* 텍스트가 잘리지 않도록 패딩 조절 */ border-radius: 8px; font-weight: 900; /* Bold 강조 */ box-shadow: 0 4px 6px rgba(0,0,0,0.2); /* 입체감 부여 */ transition: 0.2s; 
-        /* [개선] 텍스트 세로 중앙 정렬을 위한 Flexbox 추가 */
-        display: flex; align-items: center; justify-content: center; 
-        }
-        .admin-nav a:hover { background: white; transform: translateY(-2px); /* 호버 효과 */ }
         
         .container { max-width: 1200px; margin: -25px auto 0 auto; padding: 0 15px; }
         
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card-title { font-size: 17px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
-        /* 1. 최근 경기 리스트 */
-        .match-list { display: flex; flex-direction: column; gap: 10px; }
+        /* 최근 경기 리스트 */
+        .match-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; } /* 경기 수가 많아질 경우를 대비해 스크롤 추가 */
         .match-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         .match-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         .match-info { font-size: 12px; font-weight: bold; color: #718096; margin-bottom: 8px; text-align: center; }
@@ -35,8 +33,8 @@
         .m-team { font-size: 15px; font-weight: 900; flex: 1; }
         .m-team.a { text-align: right; color: #3182ce; }
         .m-team.b { text-align: left; color: #e53e3e; }
-        .m-score { font-size: 24px; font-weight: 900; background: white; padding: 4px 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .m-vs { font-size: 13px; font-weight: bold; color: #a0aec0; }
+        .m-score { font-size: 20px; font-weight: 900; background: white; padding: 4px 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .m-vs { font-size: 12px; font-weight: bold; color: #a0aec0; }
         
         .match-details { display: none; padding: 15px; border-top: 1px dashed #e2e8f0; background: white; font-size: 13px; }
         .detail-row { margin-bottom: 15px; }
@@ -45,42 +43,36 @@
         .goal-event { margin-bottom: 4px; color: #2d3748; }
         .goal-event span.scorer { font-weight: 800; color: #3182ce; }
 
-        /* [개선] 2. 개인 타이틀 (가로 스크롤 & Top 5 상시 노출) */
+        /* 개인 타이틀 */
         .awards-grid { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .award-card { flex: 0 0 240px; scroll-snap-align: start; background: linear-gradient(to bottom right, #ffffff, #f7fafc); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .award-icon { font-size: 24px; margin-bottom: 5px; }
         .award-name { font-size: 12px; font-weight: 800; color: #718096; margin-bottom: 5px; }
         .award-player { font-size: 18px; font-weight: 900; color: #2b6cb0; margin-bottom: 2px; }
         .award-stat { font-size: 13px; font-weight: bold; color: #e53e3e; }
-        
-        /* 숨기지 않고 항상 보여줍니다 */
         .award-list { display: block; margin-top: 12px; border-top: 1px dashed #e2e8f0; padding-top: 10px; text-align: left; }
         .award-list-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: #4a5568; }
         .award-list-rank { font-weight: 900; color: #a0aec0; width: 15px; }
         .award-list-name { flex: 1; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 5px; }
         .award-list-val { font-weight: bold; color: #2d3748; }
 
-        /* [개선] 3. 종합 스탯 리더보드 (모바일 최적화 다이어트) */
+        /* 종합 스탯 리더보드 */
         .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; background: white; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; } /* 너비 대폭 축소 */
-        th, td { padding: 10px 6px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 13px; white-space: nowrap; } /* 패딩 및 폰트 축소 */
-        
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 10px 6px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 13px; white-space: nowrap; }
         th { background: #f7fafc; color: #4a5568; font-weight: 800; font-size: 11px; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #e2e8f0; }
         th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: white; z-index: 20; border-right: 1px solid #e2e8f0; text-align: left; padding-left: 10px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
         th:nth-child(2) { background: #f7fafc; z-index: 30; }
-        
         td.player-name { font-weight: 900; color: #2d3748; cursor: pointer; }
-        
         .col-pts { font-weight: 900; color: #3182ce; background: rgba(49,130,206,0.05); }
         .col-winrate { font-weight: bold; color: #38a169; }
         .col-gd { font-weight: bold; } 
-        
         .rank-badge { display: inline-block; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; font-weight: 900; font-size: 11px; color: #718096; background: #edf2f7; }
         .rank-1 { background: #ecc94b; color: white; box-shadow: 0 2px 4px rgba(236,201,75,0.4); transform: scale(1.1); }
         .rank-2 { background: #a0aec0; color: white; }
         .rank-3 { background: #ed8936; color: white; }
 
-        /* 4. 시너지 카드 (맨 아래로 이동) */
+        /* 시너지 카드 */
         .synergy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 10px; }
         .synergy-card { padding: 20px; border-radius: 16px; color: white; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .syn-duo { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
@@ -88,12 +80,10 @@
         .syn-nemesis { background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%); }
         .syn-shield { background: linear-gradient(135deg, #38a169 0%, #276749 100%); }
         .syn-sad { background: linear-gradient(135deg, #718096 0%, #4a5568 100%); }
-        
         .syn-icon { font-size: 24px; margin-bottom: 10px; }
         .syn-title { font-size: 14px; font-weight: bold; opacity: 0.9; margin-bottom: 5px; }
         .syn-players { font-size: 20px; font-weight: 900; margin-bottom: 5px; line-height: 1.2; }
         .syn-desc { font-size: 12px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
-        
         .syn-ranking-list { border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
         .syn-rank-item { display: flex; justify-content: space-between; align-items: center; opacity: 0.9; }
         .syn-rank-num { font-weight: 900; width: 15px; opacity: 0.7; }
@@ -101,6 +91,10 @@
         .syn-rank-score { font-weight: bold; text-align: right; }
 
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
+
+        /* 커스텀 스크롤바 (웹킷 전용) */
+        .match-list::-webkit-scrollbar { width: 6px; }
+        .match-list::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -117,7 +111,7 @@
     <div class="container">
         
         <div class="card" style="margin-top: -30px; position: relative; z-index: 5;">
-            <div class="card-title">📅 최근 경기 리포트</div>
+            <div class="card-title" id="recentMatchTitle">📅 최근 모임 리포트</div>
             <p style="font-size: 12px; color: #a0aec0; margin-top:-10px; margin-bottom:15px;">* 경기를 터치하면 라인업과 득점 기록을 볼 수 있습니다.</p>
             <div id="recentMatchesContainer" class="match-list">
                 <div class="loading">경기 기록을 불러오는 중...</div>
@@ -158,8 +152,8 @@
         </div>
 
         <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
-            <div class="card-title" style="padding-left: 5px;">🕵️‍♂️ 데이터 ai 분석 (팀 시너지)</div>
-            <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px; padding-left: 5px;">* 억울한 에이스: 팀내 경기당 포인트 평균 이상이나 승률은 최하위.</p>
+            <div class="card-title" style="padding-left: 5px;">🕵️‍♂️ 데이터 팩트 폭행 (팀 시너지)</div>
+            <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px; padding-left: 5px;">* 억울한 에이스: 팀내 평균 공격P 이상이나 승률은 최하위.</p>
             <div class="synergy-grid" id="synergyContainer">
                 <div class="loading">시너지 분석 중...</div>
             </div>
@@ -180,7 +174,6 @@
         }
 
         function goToPlayerDetail(playerName) {
-            // 이름을 가지고 프로필 페이지로 이동합니다.
             window.location.href = `player_profile.html?name=${encodeURIComponent(playerName)}`;
         }
 
@@ -205,7 +198,7 @@
             playersData.forEach(p => playersMap[p.id] = p.name);
 
             // =========================================================
-            // 1. 최근 경기
+            // [개선 2] 최근 경기: 가장 최근 '일자'의 모든 경기를 렌더링
             // =========================================================
             const recentContainer = document.getElementById('recentMatchesContainer');
             recentContainer.innerHTML = '';
@@ -213,7 +206,15 @@
             if (gamesData.length === 0) {
                 recentContainer.innerHTML = '<div style="padding:20px; text-align:center;">경기가 없습니다.</div>';
             } else {
-                const recentGames = gamesData.slice(0, 3);
+                // 가장 최신 경기의 날짜를 추출
+                const latestDate = gamesData[0].match_days.match_date;
+                
+                // 타이틀 업데이트
+                document.getElementById('recentMatchTitle').innerHTML = `📅 최근 모임 리포트 <span style="font-size:14px; color:#a0aec0; margin-left:8px;">(${latestDate})</span>`;
+
+                // 해당 날짜에 치러진 모든 경기만 필터링 (보통 6~8경기)
+                const recentGames = gamesData.filter(g => g.match_days.match_date === latestDate);
+
                 recentGames.forEach(game => {
                     const isFriendly = game.match_days.match_type === '교류전';
                     const teamAName = isFriendly ? '풉살팀' : 'A팀';
@@ -251,7 +252,7 @@
                         <div class="match-item">
                             <div class="match-header" onclick="toggleMatchDetails('${game.id}')">
                                 <div style="flex:1;">
-                                    <div class="match-info">${game.match_days.match_date} | ${game.match_days.match_type} (${game.game_number}경기)</div>
+                                    <div class="match-info">${game.game_number}경기 | ${game.match_days.match_type}</div>
                                     <div class="match-score-wrap">
                                         <div class="m-team a">${teamAName}</div>
                                         <div class="m-score">${game.team_a_score}</div>
@@ -281,7 +282,7 @@
             }
 
             // =========================================================
-            // 2. 선수 스탯 집계
+            // 이하 스탯 연산 및 렌더링 로직 (V5와 동일)
             // =========================================================
             const stats = {};
             playersData.forEach(p => {
@@ -333,9 +334,6 @@
                 return { ...s, points, gd, winRate, avgGoals, avgAssists, avgPoints };
             });
 
-            // =========================================================
-            // 3. 개인 타이틀 (가로 스크롤 카드)
-            // =========================================================
             function renderAwardCard(title, icon, unit, dataArray, sortKey) {
                 const sorted = [...dataArray].sort((a,b) => b[sortKey] - a[sortKey]).filter(s => s[sortKey] > 0).slice(0, 5);
                 
@@ -362,7 +360,6 @@
                 `;
             }
 
-            // 요청하신 순서대로 배치 (MOM과 MIP 나란히)
             document.getElementById('awardsContainer').innerHTML = `
                 ${renderAwardCard('누적 득점', '⚽', '골', statsArray, 'goals')}
                 ${renderAwardCard('누적 도움', '👟', '개', statsArray, 'assists')}
@@ -374,9 +371,6 @@
                 ${renderAwardCard('최다 MIP', '📈', '회', statsArray, 'mip')}
             `;
 
-            // =========================================================
-            // 4. 종합 리더보드
-            // =========================================================
             statsArray.sort((a, b) => {
                 if (b.goals !== a.goals) return b.goals - a.goals;
                 if (b.assists !== a.assists) return b.assists - a.assists;
@@ -411,9 +405,6 @@
                 tbody.appendChild(tr);
             });
 
-            // =========================================================
-            // 5. 시너지 분석 (맨 아래)
-            // =========================================================
             const duosObj = {};    
             const nemesisObj = {}; 
 
