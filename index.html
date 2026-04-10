@@ -13,9 +13,13 @@
         .header h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
         .header p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.8; }
         
-        .admin-nav { position: absolute; top: 20px; right: 15px; display: flex; gap: 10px; }
-        .admin-nav a { text-decoration: none; color: #1a365d; font-size: 14px; background: rgba(255,255,255,0.95); padding: 8px 14px; border-radius: 8px; font-weight: 900; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s; }
-        .admin-nav a:hover { background: white; transform: translateY(-2px); }
+        /* 상단 관리자 네비게이션 가시성 및 디자인 개선 */
+        .admin-nav { position: absolute; top: 25px; /* 타이틀 디자인과 겹치지 않도록 아래로 내림 */ right: 15px; display: flex; gap: 10px; z-index: 100; /* 헤더보다 위에 위치 */ }
+        .admin-nav a { text-decoration: none; color: #1a365d; /* 어두운 색으로 변경하여 대비 높임 */ font-size: 13px; /* 가독성을 위해 크기 조절 */ background: rgba(255,255,255,0.95); padding: 6px 12px; /* 텍스트가 잘리지 않도록 패딩 조절 */ border-radius: 8px; font-weight: 900; /* Bold 강조 */ box-shadow: 0 4px 6px rgba(0,0,0,0.2); /* 입체감 부여 */ transition: 0.2s; 
+            /* [개선] 텍스트 세로 중앙 정렬을 위한 Flexbox 추가 */
+            display: flex; align-items: center; justify-content: center; 
+        }
+        .admin-nav a:hover { background: white; transform: translateY(-2px); /* 호버 효과 */ }
         
         .container { max-width: 1200px; margin: -25px auto 0 auto; padding: 0 15px; }
         
