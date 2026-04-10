@@ -103,9 +103,11 @@
                 supabaseClient.from('game_goals').select('*')
             ]);
 
+            const targetPlayer = playersRes.data.find(p => p.name === targetName);
             if (playersRes.error || gamesRes.error || lineupsRes.error || goalsRes.error) {
                 return document.getElementById('app').innerHTML = '<div class="loading" style="color:#e53e3e;">데이터 로딩 중 오류가 발생했습니다.</div>';
             }
+            const gamesData = gamesRes.data; // 🔥 이 줄을 추가해 주세요!
 
             const targetPlayer = playersRes.data.find(p => p.name === targetName);
             if (!targetPlayer) {
