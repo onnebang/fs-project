@@ -3,61 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FC 풉살 데이터 센터</title>
+    <title>FC 풉살 공식 데이터 센터</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; color: #2d3436; margin: 0; padding: 0; padding-bottom: 50px; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f0f4f8; color: #1a202c; margin: 0; padding: 0; padding-bottom: 60px; }
         
         .header { background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%); color: white; padding: 30px 20px 40px 20px; text-align: center; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; }
-        .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.8; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
+        .header p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.8; }
         
         .admin-nav { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; }
         .admin-nav a { text-decoration: none; color: white; font-size: 11px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 12px; font-weight: bold; backdrop-filter: blur(5px); }
 
         .container { max-width: 1200px; margin: -25px auto 0 auto; padding: 0 15px; }
-
-        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .card-title { font-size: 16px; font-weight: 800; color: #2d3748; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         
-        .latest-match { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; }
-        .match-date { font-size: 12px; font-weight: bold; color: #718096; margin-bottom: 10px; }
-        .score-board { display: flex; justify-content: center; align-items: center; gap: 20px; }
-        .team-name { font-size: 18px; font-weight: 900; width: 60px; }
-        .team-a { color: #3182ce; }
-        .team-b { color: #e53e3e; }
-        .score { font-size: 32px; font-weight: 900; color: #1a202c; background: white; padding: 5px 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .vs { font-size: 16px; font-weight: bold; color: #a0aec0; }
-        .match-footer { margin-top: 15px; font-size: 13px; font-weight: bold; color: #ecc94b; background: #fffbeb; padding: 8px; border-radius: 8px; display: inline-block; }
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-title { font-size: 17px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
-        /* 시너지 카드 */
-        .synergy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .synergy-card { padding: 20px; border-radius: 16px; color: white; display: flex; flex-direction: column; justify-content: flex-start; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* [개선] 1. 최근 경기 리스트 (아코디언 스타일) */
+        .match-list { display: flex; flex-direction: column; gap: 10px; }
+        .match-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .match-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        .match-header:hover { background: #edf2f7; }
+        .match-info { font-size: 12px; font-weight: bold; color: #718096; margin-bottom: 8px; text-align: center; }
+        .match-score-wrap { display: flex; justify-content: center; align-items: center; gap: 15px; width: 100%; }
+        .m-team { font-size: 15px; font-weight: 900; flex: 1; }
+        .m-team.a { text-align: right; color: #3182ce; }
+        .m-team.b { text-align: left; color: #e53e3e; }
+        .m-score { font-size: 24px; font-weight: 900; background: white; padding: 4px 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .m-vs { font-size: 13px; font-weight: bold; color: #a0aec0; }
+        
+        .match-details { display: none; padding: 15px; border-top: 1px dashed #e2e8f0; background: white; font-size: 13px; }
+        .detail-row { margin-bottom: 15px; }
+        .detail-title { font-weight: 800; color: #4a5568; margin-bottom: 5px; border-bottom: 2px solid #edf2f7; padding-bottom: 3px; display: inline-block; }
+        .lineup-text { color: #4a5568; line-height: 1.5; margin-bottom: 5px; }
+        .goal-event { margin-bottom: 4px; color: #2d3748; }
+        .goal-event span.scorer { font-weight: 800; color: #3182ce; }
+        .goal-event span.assist { color: #718096; font-size: 12px; }
+
+        /* [신규] 2. 개인 타이틀 (단순 스탯 리더) */
+        .awards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .award-card { background: linear-gradient(to bottom right, #ffffff, #f7fafc); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .award-icon { font-size: 24px; margin-bottom: 5px; }
+        .award-name { font-size: 12px; font-weight: 800; color: #718096; margin-bottom: 5px; }
+        .award-player { font-size: 18px; font-weight: 900; color: #2b6cb0; margin-bottom: 2px; }
+        .award-stat { font-size: 13px; font-weight: bold; color: #e53e3e; }
+
+        /* 3. 시너지 카드 (기존 유지) */
+        .synergy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 10px; }
+        .synergy-card { padding: 20px; border-radius: 16px; color: white; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .syn-duo { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
         .syn-nemesis { background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%); }
         .syn-shield { background: linear-gradient(135deg, #38a169 0%, #276749 100%); }
-        .syn-delivery { background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%); }
         .syn-sad { background: linear-gradient(135deg, #718096 0%, #4a5568 100%); }
         
         .syn-icon { font-size: 24px; margin-bottom: 10px; }
         .syn-title { font-size: 14px; font-weight: bold; opacity: 0.9; margin-bottom: 5px; }
         .syn-players { font-size: 20px; font-weight: 900; margin-bottom: 10px; line-height: 1.2; }
-        .syn-desc { font-size: 12px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
-        
-        /* [추가] 2~5위 리스트 스타일 */
-        .syn-ranking-list { border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
-        .syn-rank-item { display: flex; justify-content: space-between; align-items: center; opacity: 0.85; }
-        .syn-rank-num { font-weight: 900; width: 15px; opacity: 0.7; }
-        .syn-rank-name { flex: 1; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .syn-rank-score { font-weight: bold; text-align: right; }
+        .syn-desc { font-size: 12px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; }
 
-        /* 리더보드 */
-        .table-container { overflow-x: auto; margin-top: 10px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 14px; }
-        th { background: #f7fafc; color: #4a5568; font-weight: 800; font-size: 12px; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
-        td.player-name { font-weight: 800; color: #2d3748; text-align: left; padding-left: 15px; }
+        /* [개선] 4. 종합 스탯 리더보드 (가로 스크롤 + 틀고정) */
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; background: white; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 14px; white-space: nowrap; }
+        
+        /* 테이블 헤더 및 틀고정(Sticky) 설정 */
+        th { background: #f7fafc; color: #4a5568; font-weight: 800; font-size: 12px; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #e2e8f0; }
+        th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: white; z-index: 20; border-right: 1px solid #e2e8f0; text-align: left; padding-left: 15px; }
+        th:nth-child(2) { background: #f7fafc; z-index: 30; }
+        
+        td.player-name { font-weight: 900; color: #2d3748; cursor: pointer; }
+        td.player-name:hover { color: #3182ce; text-decoration: underline; }
         
         .col-pts { font-weight: 900; color: #3182ce; background: rgba(49,130,206,0.05); }
         .col-winrate { font-weight: bold; color: #38a169; }
@@ -67,17 +84,6 @@
         .rank-1 { background: #ecc94b; color: white; box-shadow: 0 2px 4px rgba(236,201,75,0.4); transform: scale(1.1); }
         .rank-2 { background: #a0aec0; color: white; }
         .rank-3 { background: #ed8936; color: white; }
-        tr:hover { background: #f8fafc; }
-
-        /* 비디오 */
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .video-item { background: #1a202c; border-radius: 12px; overflow: hidden; cursor: pointer; transition: 0.2s; position: relative; }
-        .video-item:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
-        .video-thumb { width: 100%; aspect-ratio: 16 / 9; background-size: cover; background-position: center; position: relative; }
-        .play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
-        .video-info { padding: 12px; }
-        .video-tag { display: inline-block; background: #e53e3e; color: white; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-bottom: 5px; }
-        .video-title { color: white; font-size: 14px; font-weight: bold; line-height: 1.4; }
 
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
     </style>
@@ -90,288 +96,281 @@
             <a href="admin_dashboard.html">⚙️ 관리자</a>
         </div>
         <h1>FC 풉살 데이터 센터</h1>
-        <p>추억 보관소 (x) 기록 보관소 (o)</p>
+        <p>추억 보관소 (X) 기록 보관소 (O)</p>
     </div>
 
     <div class="container">
+        
         <div class="card" style="margin-top: -30px; position: relative; z-index: 5;">
-            <div class="card-title">📅 가장 최근 경기 하이라이트</div>
-            <div id="latestMatchContainer" class="loading">데이터를 불러오는 중입니다...</div>
+            <div class="card-title">📅 최근 경기 리포트</div>
+            <p style="font-size: 12px; color: #a0aec0; margin-top:-10px; margin-bottom:15px;">* 경기를 터치하면 라인업과 득점 기록을 볼 수 있습니다.</p>
+            <div id="recentMatchesContainer" class="match-list">
+                <div class="loading">경기 기록을 불러오는 중...</div>
+            </div>
         </div>
 
         <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
-            <div class="card-title" style="padding-left: 5px;">🕵️‍♂️ 데이터 팩트 폭행 (Top 5 랭킹)</div>
+            <div class="card-title" style="padding-left: 5px;">👑 2026 시즌 개인 타이틀</div>
+            <div class="awards-grid" id="awardsContainer">
+                <div class="loading">타이틀 홀더 계산 중...</div>
+            </div>
+        </div>
+
+        <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
+            <div class="card-title" style="padding-left: 5px;">🕵️‍♂️ 데이터 팩트 폭행 (팀 시너지)</div>
             <div class="synergy-grid" id="synergyContainer">
-                <div class="loading" style="color:#718096; padding:20px;">시너지 분석 중...</div>
+                <div class="loading">시너지 분석 중...</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">🏆 2026 시즌 종합 스탯 랭킹</div>
-            <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px;">* 공격포인트(골+도움) 순으로 정렬됩니다.</p>
+            <div class="card-title">🏆 종합 스탯 리더보드</div>
+            <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px;">* 득점 > 도움 > 경기수 순 정렬. (표를 좌우로 스크롤 하세요)</p>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 50px;">순위</th>
-                            <th style="text-align: left; padding-left: 15px;">선수명</th>
-                            <th class="col-pts">공격P</th>
-                            <th>⚽ 골</th>
+                            <th style="width: 40px;">순위</th>
+                            <th style="min-width: 80px;">선수명</th>
+                            <th>⚽ 득점</th>
                             <th>👟 도움</th>
-                            <th>⛔ 실점</th>
-                            <th class="col-gd">+/-</th>
+                            <th class="col-pts">공격P</th>
                             <th>출전</th>
-                            <th class="col-winrate">승률</th>
-                            <th title="90분 환산 득점력">P90</th>
+                            <th class="col-winrate">승률 (승/패)</th>
+                            <th>시간(분)</th>
+                            <th class="col-gd">+/- (득실차)</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboardBody">
-                        <tr><td colspan="10" class="loading">스탯을 계산하고 있습니다...</td></tr>
+                        <tr><td colspan="9" class="loading">스탯을 계산하고 있습니다...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-title">📺 풉살 미디어 아카이브</div>
-            <div class="video-grid" id="videoContainer"></div>
-        </div>
     </div>
 
     <script>
+        // ==========================================
+        // Supabase 연동 (반드시 본인 키로 변경!)
+        // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = () => {
-            loadLatestMatch();
-            loadDashboardData();
-            loadVideos();
+            loadAllData(); // 모든 데이터를 한 번에 불러와서 분배
         };
 
-        async function loadLatestMatch() {
-            const { data, error } = await supabaseClient.from('games')
-                .select('*, match_days(match_date, match_type, opponent), game_lineups(player_id, is_mom, players(name))')
-                .order('created_at', { ascending: false }).limit(1);
-
-            const container = document.getElementById('latestMatchContainer');
-            if (error || data.length === 0) return container.innerHTML = '<div style="color:#a0aec0; padding:20px;">아직 등록된 경기가 없습니다.</div>';
-
-            const game = data[0];
-            const isFriendly = game.match_days.match_type === '교류전';
-            const teamAName = isFriendly ? '우리팀' : 'A팀';
-            const teamBName = isFriendly ? (game.match_days.opponent || '상대팀') : 'B팀';
-
-            let momHtml = '';
-            const momLineup = game.game_lineups.find(l => l.is_mom === true);
-            if (momLineup && momLineup.players) {
-                momHtml = `<div class="match-footer">⭐ 경기 최우수 선수(MOM) : ${momLineup.players.name}</div>`;
-            } else if (game.team_a_rating === null) {
-                momHtml = `<div class="match-footer" style="color:#a0aec0; background:#f7fafc;">코치진 평가를 기다리는 중입니다... ⏳</div>`;
-            }
-
-            container.innerHTML = `
-                <div class="latest-match">
-                    <div class="match-date">${game.match_days.match_date} | ${game.match_days.match_type} (${game.game_number}경기)</div>
-                    <div class="score-board">
-                        <div class="team-name team-a">${teamAName}</div>
-                        <div class="score">${game.team_a_score}</div>
-                        <div class="vs">VS</div>
-                        <div class="score">${game.team_b_score}</div>
-                        <div class="team-name team-b" style="color:${isFriendly ? '#718096' : '#e53e3e'}">${teamBName}</div>
-                    </div>
-                    ${momHtml}
-                </div>
-            `;
+        // 아코디언 토글 함수 (HTML에서 onclick으로 호출됨)
+        function toggleMatchDetails(id) {
+            const el = document.getElementById(`match-details-${id}`);
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
-        async function loadDashboardData() {
-            const [playersRes, lineupsRes, goalsRes, gamesRes] = await Promise.all([
+        // 선수 상세 페이지 이동 (미구현 알림)
+        function goToPlayerDetail(playerName) {
+            alert(`[업데이트 예정]\n곧 '${playerName}' 선수의 상세 상성 및 전적 페이지가 오픈됩니다!`);
+        }
+
+        // ==========================================
+        // 메인 데이터 로드 및 렌더링 엔진
+        // ==========================================
+        async function loadAllData() {
+            // 1. 모든 필요 데이터를 병렬로 한 방에 가져오기
+            const [playersRes, gamesRes, lineupsRes, goalsRes] = await Promise.all([
                 supabaseClient.from('players').select('id, name, is_guest'),
-                supabaseClient.from('game_lineups').select('player_id, game_id, team, is_mom'),
-                supabaseClient.from('game_goals').select('scorer_id, assist_id, is_own_goal'),
-                supabaseClient.from('games').select('id, duration_mins, team_a_score, team_b_score')
+                supabaseClient.from('games').select('*, match_days(match_date, match_type, opponent)').order('created_at', { ascending: false }),
+                supabaseClient.from('game_lineups').select('*'),
+                supabaseClient.from('game_goals').select('*')
             ]);
 
-            if (playersRes.error || lineupsRes.error || goalsRes.error || gamesRes.error) return;
+            if (playersRes.error || gamesRes.error || lineupsRes.error || goalsRes.error) {
+                return alert("데이터를 불러오는 중 오류가 발생했습니다.");
+            }
+
+            const playersData = playersRes.data;
+            const gamesData = gamesRes.data;
+            const lineupsData = lineupsRes.data;
+            const goalsData = goalsRes.data;
 
             const playersMap = {};
-            playersRes.data.forEach(p => playersMap[p.id] = p.name);
+            playersData.forEach(p => playersMap[p.id] = p.name);
 
-            const gamesMap = {};
-            gamesRes.data.forEach(g => {
-                gamesMap[g.id] = {
-                    duration: g.duration_mins || 15,
-                    scoreA: g.team_a_score || 0,
-                    scoreB: g.team_b_score || 0,
-                    winner: (g.team_a_score > g.team_b_score) ? 'A' : (g.team_b_score > g.team_a_score) ? 'B' : 'DRAW'
-                };
-            });
+            // =========================================================
+            // [모듈 1] 최근 3경기 리스트 렌더링
+            // =========================================================
+            const recentContainer = document.getElementById('recentMatchesContainer');
+            recentContainer.innerHTML = '';
+            
+            if (gamesData.length === 0) {
+                recentContainer.innerHTML = '<div style="padding:20px; text-align:center;">경기가 없습니다.</div>';
+            } else {
+                // 상위 3경기만 추출
+                const recentGames = gamesData.slice(0, 3);
+                
+                recentGames.forEach(game => {
+                    const isFriendly = game.match_days.match_type === '교류전';
+                    const teamAName = isFriendly ? '풉살팀' : 'A팀';
+                    const teamBName = isFriendly ? (game.match_days.opponent || '상대팀') : 'B팀';
 
+                    // 라인업 분류
+                    let lineupA = [], lineupB = [];
+                    lineupsData.filter(l => l.game_id === game.id).forEach(l => {
+                        const name = playersMap[l.player_id] || '알수없음';
+                        const text = l.is_gk ? `${name}(K)` : name;
+                        if (l.team === 'A') lineupA.push(text);
+                        else lineupB.push(text);
+                    });
+
+                    // 득점 기록 분류
+                    let goalsAHtml = '', goalsBHtml = '';
+                    const gameGoals = goalsData.filter(g => g.game_id === game.id);
+                    
+                    gameGoals.forEach(g => {
+                        if (g.is_own_goal) {
+                            const html = `<div class="goal-event">⚽ 자책골 (상대팀)</div>`;
+                            if (g.scoring_team === 'A') goalsAHtml += html; else goalsBHtml += html;
+                        } else {
+                            const scorer = playersMap[g.scorer_id];
+                            const assist = g.assist_id ? playersMap[g.assist_id] : null;
+                            const assistText = assist ? `<span class="assist">(도움: ${assist})</span>` : '';
+                            const html = `<div class="goal-event"><span class="scorer">${scorer}</span> ⚽ ${assistText}</div>`;
+                            
+                            if (g.scoring_team === 'A') goalsAHtml += html; else goalsBHtml += html;
+                        }
+                    });
+
+                    if (!goalsAHtml) goalsAHtml = '<div style="color:#a0aec0; font-size:12px;">득점 없음</div>';
+                    if (!goalsBHtml) goalsBHtml = '<div style="color:#a0aec0; font-size:12px;">득점 없음</div>';
+                    if (isFriendly && !goalsBHtml.includes('자책골')) goalsBHtml = `<div style="color:#a0aec0; font-size:12px;">총 ${game.team_b_score}실점</div>`;
+
+                    const matchHtml = `
+                        <div class="match-item">
+                            <div class="match-header" onclick="toggleMatchDetails('${game.id}')">
+                                <div style="flex:1;">
+                                    <div class="match-info">${game.match_days.match_date} | ${game.match_days.match_type} (${game.game_number}경기)</div>
+                                    <div class="match-score-wrap">
+                                        <div class="m-team a">${teamAName}</div>
+                                        <div class="m-score">${game.team_a_score}</div>
+                                        <div class="m-vs">VS</div>
+                                        <div class="m-score">${game.team_b_score}</div>
+                                        <div class="m-team b" style="color:${isFriendly ? '#718096' : '#e53e3e'}">${teamBName}</div>
+                                    </div>
+                                </div>
+                                <div style="color:#a0aec0; font-size:12px;">▼ 상세</div>
+                            </div>
+                            <div class="match-details" id="match-details-${game.id}">
+                                <div class="detail-row">
+                                    <div class="detail-title" style="color:#3182ce;">${teamAName} 출전 (${lineupA.length}명)</div>
+                                    <div class="lineup-text">${lineupA.join(', ') || '기록 없음'}</div>
+                                    <div style="margin-top:8px;">${goalsAHtml}</div>
+                                </div>
+                                <div class="detail-row" style="margin-bottom:0;">
+                                    <div class="detail-title" style="color:#e53e3e;">${teamBName} 출전 (${isFriendly ? '미상' : lineupB.length+'명'})</div>
+                                    <div class="lineup-text">${isFriendly ? '상대팀 명단 생략' : lineupB.join(', ')}</div>
+                                    <div style="margin-top:8px;">${goalsBHtml}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    recentContainer.innerHTML += matchHtml;
+                });
+            }
+
+            // =========================================================
+            // [모듈 2 & 4] 선수 개인 스탯 집계 (리더보드 및 타이틀 홀더용)
+            // =========================================================
             const stats = {};
-            playersRes.data.forEach(p => {
-                stats[p.id] = { name: p.name, isGuest: p.is_guest, apps: 0, wins: 0, playTime: 0, goals: 0, assists: 0, conceded: 0 };
+            playersData.forEach(p => {
+                stats[p.id] = { name: p.name, apps: 0, wins: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, mom: 0, mip: 0 };
             });
 
-            const gameTeams = {}; 
-            lineupsRes.data.forEach(l => {
+            // 출전, 승패, 실점, MOM, MIP 연산
+            const gameTeams = {}; // 시너지 연산용
+            lineupsData.forEach(l => {
                 const pStat = stats[l.player_id];
-                const gameInfo = gamesMap[l.game_id];
-                if (pStat && gameInfo) {
+                const game = gamesData.find(g => g.id === l.game_id);
+                if (pStat && game) {
                     pStat.apps += 1;
-                    pStat.playTime += gameInfo.duration;
-                    if (gameInfo.winner === l.team) pStat.wins += 1;
-                    const concededGoals = (l.team === 'A') ? gameInfo.scoreB : gameInfo.scoreA;
+                    pStat.playTime += (game.duration_mins || 15);
+                    if (l.is_mom) pStat.mom += 1;
+                    if (l.is_mip) pStat.mip += 1;
+                    
+                    const winner = (game.team_a_score > game.team_b_score) ? 'A' : (game.team_b_score > game.team_a_score) ? 'B' : 'DRAW';
+                    if (winner === l.team) pStat.wins += 1;
+                    else if (winner !== 'DRAW') pStat.losses += 1;
+                    
+                    const concededGoals = (l.team === 'A') ? game.team_b_score : game.team_a_score;
                     pStat.conceded += concededGoals;
 
-                    if (!gameTeams[l.game_id]) gameTeams[l.game_id] = { A: [], B: [] };
+                    // 시너지 배열 저장
+                    if (!gameTeams[l.game_id]) gameTeams[l.game_id] = { A: [], B: [], winner: winner };
                     if (gameTeams[l.game_id][l.team]) gameTeams[l.game_id][l.team].push(l.player_id);
                 }
             });
 
-            const assistDuos = {};
-            goalsRes.data.forEach(g => {
+            // 골, 도움 연산
+            goalsData.forEach(g => {
                 if (!g.is_own_goal && g.scorer_id && stats[g.scorer_id]) stats[g.scorer_id].goals += 1;
-                if (g.assist_id && stats[g.assist_id]) {
-                    stats[g.assist_id].assists += 1;
-                    if (g.scorer_id) {
-                        const pair = `${g.assist_id}|${g.scorer_id}`;
-                        assistDuos[pair] = (assistDuos[pair] || 0) + 1;
-                    }
-                }
+                if (g.assist_id && stats[g.assist_id]) stats[g.assist_id].assists += 1;
             });
 
-            const duosObj = {};    
-            const nemesisObj = {}; 
-
-            for (const gameId in gameTeams) {
-                const teamA = gameTeams[gameId].A || [];
-                const teamB = gameTeams[gameId].B || [];
-                const winner = gamesMap[gameId].winner;
-
-                [teamA, teamB].forEach((team, idx) => {
-                    const teamWinner = (idx === 0) ? 'A' : 'B';
-                    for(let i=0; i<team.length; i++) {
-                        for(let j=i+1; j<team.length; j++) {
-                            const pair = [team[i], team[j]].sort().join('|');
-                            if (!duosObj[pair]) duosObj[pair] = { games: 0, wins: 0 };
-                            duosObj[pair].games++;
-                            if(winner === teamWinner) duosObj[pair].wins++;
-                        }
-                    }
-                });
-
-                teamA.forEach(a => {
-                    teamB.forEach(b => {
-                        const pair1 = `${a}|${b}`, pair2 = `${b}|${a}`; 
-                        if (!nemesisObj[pair1]) nemesisObj[pair1] = { games: 0, wins: 0 };
-                        if (!nemesisObj[pair2]) nemesisObj[pair2] = { games: 0, wins: 0 };
-                        nemesisObj[pair1].games++; nemesisObj[pair2].games++;
-                        if (winner === 'A') nemesisObj[pair1].wins++;
-                        else if (winner === 'B') nemesisObj[pair2].wins++;
-                    });
-                });
-            }
-
-            const minGames = 2;
-            
-            // 1. 배열로 변환 후 정렬
-            let duoArr = [];
-            for (const key in duosObj) {
-                if (duosObj[key].games >= minGames) {
-                    const [id1, id2] = key.split('|');
-                    const rate = duosObj[key].wins / duosObj[key].games;
-                    duoArr.push({ names: `${playersMap[id1]}&${playersMap[id2]}`, rate, desc: `${Math.round(rate*100)}% (${duosObj[key].games}전)` });
-                }
-            }
-            duoArr.sort((a,b) => b.rate - a.rate);
-
-            let nemArr = [];
-            for (const key in nemesisObj) {
-                if (nemesisObj[key].games >= minGames) {
-                    const [wId, lId] = key.split('|');
-                    const rate = nemesisObj[key].wins / nemesisObj[key].games;
-                    nemArr.push({ names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, rate, desc: `승률 ${Math.round(rate*100)}% (${nemesisObj[key].games}전)` });
-                }
-            }
-            nemArr.sort((a,b) => b.rate - a.rate);
-
-            let shieldArr = [];
-            for (const key in stats) {
-                if (stats[key].apps >= minGames) {
-                    const avg = stats[key].conceded / stats[key].apps;
-                    shieldArr.push({ names: stats[key].name, avg, desc: `${avg.toFixed(1)}골 (${stats[key].apps}전)` });
-                }
-            }
-            shieldArr.sort((a,b) => a.avg - b.avg);
-
-            let deliveryArr = [];
-            for (const key in assistDuos) {
-                const [aId, sId] = key.split('|');
-                deliveryArr.push({ names: `${playersMap[aId]} ➡️ ${playersMap[sId]}`, goals: assistDuos[key], desc: `${assistDuos[key]}골` });
-            }
-            deliveryArr.sort((a,b) => b.goals - a.goals);
-
-            let sadArr = [];
-            const activePlayers = Object.values(stats).filter(s => s.apps >= minGames);
-            if (activePlayers.length > 0) {
-                const avgPts = activePlayers.reduce((sum, s) => sum + (s.goals + s.assists), 0) / activePlayers.length;
-                activePlayers.forEach(s => {
-                    const pts = s.goals + s.assists;
-                    const winRate = s.apps > 0 ? (s.wins / s.apps) * 100 : 0;
-                    if (pts >= avgPts) {
-                        sadArr.push({ names: s.name, winRate, pts, desc: `승률 ${Math.round(winRate)}% (${pts}P)` });
-                    }
-                });
-            }
-            sadArr.sort((a,b) => a.winRate - b.winRate || b.pts - a.pts);
-
-            // 카드 렌더링 헬퍼 함수
-            function renderCard(title, icon, arr, cssClass, emptyMsg) {
-                if (arr.length === 0) return `<div class="synergy-card ${cssClass}"><div><div class="syn-icon">${icon}</div><div class="syn-title">${title}</div><div class="syn-players">데이터 부족</div></div><div class="syn-desc">${emptyMsg}</div></div>`;
-                
-                let html = `<div class="synergy-card ${cssClass}">
-                    <div>
-                        <div class="syn-icon">${icon}</div>
-                        <div class="syn-title">${title}</div>
-                        <div class="syn-players">${arr[0].names}</div>
-                        <div class="syn-desc">${arr[0].desc}</div>
-                    </div>`;
-                
-                if (arr.length > 1) {
-                    html += `<div class="syn-ranking-list">`;
-                    for(let i=1; i<Math.min(5, arr.length); i++) {
-                        html += `<div class="syn-rank-item"><span class="syn-rank-num">${i+1}</span><span class="syn-rank-name">${arr[i].names}</span><span class="syn-rank-score">${arr[i].desc}</span></div>`;
-                    }
-                    html += `</div>`;
-                }
-                html += `</div>`;
-                return html;
-            }
-
-            document.getElementById('synergyContainer').innerHTML = `
-                ${renderCard('승리 보증 수표', '🔥', duoArr, 'syn-duo', '최소 2경기 동반 출전 필요')}
-                ${renderCard('로켓 배송 (합작)', '📦', deliveryArr, 'syn-delivery', '어시스트 기록 필요')}
-                ${renderCard('국밥 수비수 (최소실점)', '🛡️', shieldArr, 'syn-shield', '최소 2경기 출전 필요')}
-                ${renderCard('인간 상성 (천적)', '⚔️', nemArr, 'syn-nemesis', '적으로 2경기 이상 조우 필요')}
-                ${renderCard('고통받는 에이스', '😭', sadArr, 'syn-sad', '포인트 상위권 데이터 필요')}
-            `;
-
-            // 리더보드 렌더링
+            // 스탯 배열화 및 부가 지표 연산
+            const activePlayers = Object.values(stats).filter(s => s.apps > 0);
             const statsArray = activePlayers.map(s => {
                 const points = s.goals + s.assists;
-                const gd = s.goals - s.conceded; 
+                const gd = s.goals - s.conceded;
                 const winRate = s.apps > 0 ? Math.round((s.wins / s.apps) * 100) : 0;
-                const p90 = s.playTime > 0 ? ((s.goals / s.playTime) * 90).toFixed(2) : "0.00";
-                return { ...s, points, gd, winRate, p90 };
+                return { ...s, points, gd, winRate };
             });
 
+            // =========================================================
+            // [렌더링] 개인 타이틀 (Top 1)
+            // =========================================================
+            const getTop = (arr, key) => arr.reduce((max, p) => p[key] > max[key] ? p : max, arr[0] || {name:'-', [key]:0});
+            
+            const topScorer = getTop(statsArray, 'goals');
+            const topAssist = getTop(statsArray, 'assists');
+            const topPoints = getTop(statsArray, 'points');
+            const topMOM = getTop(statsArray, 'mom');
+            
+            document.getElementById('awardsContainer').innerHTML = `
+                <div class="award-card">
+                    <div class="award-icon">⚽</div>
+                    <div class="award-name">득점왕</div>
+                    <div class="award-player">${topScorer.goals > 0 ? topScorer.name : '-'}</div>
+                    <div class="award-stat">${topScorer.goals}골</div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">👟</div>
+                    <div class="award-name">도움왕</div>
+                    <div class="award-player">${topAssist.assists > 0 ? topAssist.name : '-'}</div>
+                    <div class="award-stat">${topAssist.assists}도움</div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">🎯</div>
+                    <div class="award-name">공격포인트 1위</div>
+                    <div class="award-player">${topPoints.points > 0 ? topPoints.name : '-'}</div>
+                    <div class="award-stat">${topPoints.points}P</div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">⭐</div>
+                    <div class="award-name">최다 MOM</div>
+                    <div class="award-player">${topMOM.mom > 0 ? topMOM.name : '-'}</div>
+                    <div class="award-stat">${topMOM.mom}회</div>
+                </div>
+            `;
+
+            // =========================================================
+            // [렌더링] 종합 리더보드 표 (코치님 요청 순서 적용)
+            // =========================================================
+            // 득점 > 도움 > 공격P > 경기 > 승률 > 시간 > 득실차
             statsArray.sort((a, b) => {
-                if (b.points !== a.points) return b.points - a.points;
-                if (b.gd !== a.gd) return b.gd - a.gd; 
                 if (b.goals !== a.goals) return b.goals - a.goals;
-                if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-                return a.apps - b.apps;
+                if (b.assists !== a.assists) return b.assists - a.assists;
+                if (b.points !== a.points) return b.points - a.points;
+                return a.apps - b.apps; // 적게 뛰고 스탯 같으면 높은 순위
             });
 
             const tbody = document.getElementById('leaderboardBody');
@@ -386,50 +385,106 @@
 
                 const gdColor = s.gd > 0 ? '#38a169' : (s.gd < 0 ? '#e53e3e' : '#718096');
                 const gdText = s.gd > 0 ? `+${s.gd}` : s.gd;
-                const guestTag = s.isGuest ? '<span style="font-size:10px; background:#f1c40f; padding:2px 4px; border-radius:4px; margin-left:5px;">용병</span>' : '';
 
                 tr.innerHTML = `
                     <td><span class="${rankClass}">${idx + 1}</span></td>
-                    <td class="player-name">${s.name}${guestTag}</td>
+                    <td class="player-name" onclick="goToPlayerDetail('${s.name}')">${s.name}</td>
+                    <td style="font-weight:bold;">${s.goals}</td>
+                    <td style="font-weight:bold;">${s.assists}</td>
                     <td class="col-pts">${s.points}</td>
-                    <td>${s.goals}</td>
-                    <td>${s.assists}</td>
-                    <td style="color:#e53e3e;">${s.conceded}</td>
-                    <td class="col-gd" style="color:${gdColor}">${gdText}</td>
                     <td>${s.apps}</td>
-                    <td class="col-winrate">${s.winRate}%</td>
-                    <td style="color:#718096; font-size:12px;">${s.p90}</td>
+                    <td class="col-winrate">${s.winRate}% <span style="font-size:11px; color:#a0aec0;">(${s.wins}승 ${s.losses}패)</span></td>
+                    <td style="color:#718096;">${s.playTime}</td>
+                    <td class="col-gd" style="color:${gdColor}">${gdText}</td>
                 `;
                 tbody.appendChild(tr);
             });
-        }
 
-        async function loadVideos() {
-            const { data, error } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: false });
-            const container = document.getElementById('videoContainer');
-            if (error || !data || data.length === 0) return container.innerHTML = '<div style="color:#a0aec0; grid-column: 1 / -1; text-align:center; padding:20px;">아직 등록된 영상이 없습니다.</div>';
+            // =========================================================
+            // [모듈 3] 시너지 분석 (단짝 & 천적)
+            // =========================================================
+            const duos = {};    
+            const nemesis = {}; 
 
-            container.innerHTML = '';
-            data.forEach(v => {
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = v.youtube_url.match(regExp);
-                const videoId = (match && match[2].length === 11) ? match[2] : null;
-                const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : 'https://via.placeholder.com/640x360?text=No+Thumbnail';
+            for (const gameId in gameTeams) {
+                const teamA = gameTeams[gameId].A || [];
+                const teamB = gameTeams[gameId].B || [];
+                const winner = gameTeams[gameId].winner;
 
-                const card = document.createElement('div');
-                card.className = 'video-item';
-                card.onclick = () => window.open(v.youtube_url, '_blank');
-                card.innerHTML = `
-                    <div class="video-thumb" style="background-image: url('${thumbUrl}');">
-                        <div class="play-btn">▶</div>
-                    </div>
-                    <div class="video-info">
-                        <span class="video-tag">${v.category}</span>
-                        <div class="video-title">${v.title}</div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+                // 같은 팀
+                [teamA, teamB].forEach((team, idx) => {
+                    const teamWinner = (idx === 0) ? 'A' : 'B';
+                    for(let i=0; i<team.length; i++) {
+                        for(let j=i+1; j<team.length; j++) {
+                            const pair = [team[i], team[j]].sort().join('|');
+                            if (!duos[pair]) duos[pair] = { games: 0, wins: 0 };
+                            duos[pair].games++;
+                            if(winner === teamWinner) duos[pair].wins++;
+                        }
+                    }
+                });
+
+                // 적군 (천적)
+                teamA.forEach(a => {
+                    teamB.forEach(b => {
+                        const pair1 = `${a}|${b}`, pair2 = `${b}|${a}`; 
+                        if (!nemesis[pair1]) nemesis[pair1] = { games: 0, wins: 0 };
+                        if (!nemesis[pair2]) nemesis[pair2] = { games: 0, wins: 0 };
+                        nemesis[pair1].games++; nemesis[pair2].games++;
+                        if (winner === 'A') nemesis[pair1].wins++;
+                        else if (winner === 'B') nemesis[pair2].wins++;
+                    });
+                });
+            }
+
+            let bestDuo = { names: '데이터 부족', desc: '최소 2경기 동반 출전 필요', winRate: 0 };
+            for (const key in duos) {
+                if (duos[key].games >= 2) {
+                    const rate = duos[key].wins / duos[key].games;
+                    if (rate > bestDuo.winRate) {
+                        const [id1, id2] = key.split('|');
+                        bestDuo = { names: `${playersMap[id1]}&${playersMap[id2]}`, desc: `승률 ${Math.round(rate*100)}% (${duos[key].games}전)`, winRate: rate };
+                    }
+                }
+            }
+
+            let bestNemesis = { names: '데이터 부족', desc: '최소 2경기 조우 필요', winRate: 0 };
+            for (const key in nemesis) {
+                if (nemesis[key].games >= 2) {
+                    const rate = nemesis[key].wins / nemesis[key].games;
+                    if (rate > bestNemesis.winRate) {
+                        const [wId, lId] = key.split('|');
+                        bestNemesis = { names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, desc: `${playersMap[wId]} 승률 ${Math.round(rate*100)}% (${nemesis[key].games}전)`, winRate: rate };
+                    }
+                }
+            }
+
+            let sadAce = { name: '모두 행복함', desc: '-', winRate: 100 };
+            if (activePlayers.length > 0) {
+                const avgPts = activePlayers.reduce((sum, s) => sum + (s.goals + s.assists), 0) / activePlayers.length;
+                activePlayers.forEach(s => {
+                    const pts = s.goals + s.assists;
+                    const winRate = s.apps > 0 ? (s.wins / s.apps) * 100 : 0;
+                    if (s.apps >= 2 && pts >= avgPts && winRate < sadAce.winRate) {
+                        sadAce = { name: s.name, desc: `포인트 평균 이상이나 승률 ${Math.round(winRate)}%`, winRate: winRate };
+                    }
+                });
+            }
+
+            document.getElementById('synergyContainer').innerHTML = `
+                <div class="synergy-card syn-duo">
+                    <div class="syn-icon">🔥</div><div class="syn-title">승리 보증 수표 (단짝)</div>
+                    <div class="syn-players">${bestDuo.names}</div><div class="syn-desc">${bestDuo.desc}</div>
+                </div>
+                <div class="synergy-card syn-nemesis">
+                    <div class="syn-icon">⚔️</div><div class="syn-title">인간 상성 (천적)</div>
+                    <div class="syn-players">${bestNemesis.names}</div><div class="syn-desc">${bestNemesis.desc}</div>
+                </div>
+                <div class="synergy-card syn-sad">
+                    <div class="syn-icon">😭</div><div class="syn-title">고통받는 에이스</div>
+                    <div class="syn-players">${sadAce.name}</div><div class="syn-desc">${sadAce.desc}</div>
+                </div>
+            `;
         }
     </script>
 </body>
