@@ -14,7 +14,6 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f0f4f8; color: #1a202c; margin: 0; padding: 0; padding-bottom: 60px; }
         
-        /* [개선 1] 헤더 및 버튼 레이아웃 구조 변경 (겹침 방지) */
         .header { background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%); color: white; padding: 15px 20px 40px 20px; text-align: center; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
         
         .admin-nav { display: flex; justify-content: flex-end; width: 100%; gap: 8px; margin-bottom: 10px; }
@@ -29,11 +28,7 @@
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card-title { font-size: 17px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
-        /* 최근 경기 리스트 */
-        /* [수정 후] */
-        /* 스크롤 영역을 살짝 넓혀주고 (400px -> 500px) */
         .match-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; } 
-        /* 카드가 찌그러지지 않도록 강제 축소 방지 (flex-shrink: 0;) 추가 */
         .match-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
         .match-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         .match-info { font-size: 12px; font-weight: bold; color: #718096; margin-bottom: 8px; text-align: center; }
@@ -51,7 +46,6 @@
         .goal-event { margin-bottom: 4px; color: #2d3748; }
         .goal-event span.scorer { font-weight: 800; color: #3182ce; }
 
-        /* 개인 타이틀 */
         .awards-grid { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .award-card { flex: 0 0 240px; scroll-snap-align: start; background: linear-gradient(to bottom right, #ffffff, #f7fafc); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .award-icon { font-size: 24px; margin-bottom: 5px; }
@@ -64,7 +58,6 @@
         .award-list-name { flex: 1; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 5px; }
         .award-list-val { font-weight: bold; color: #2d3748; }
 
-        /* 종합 스탯 리더보드 */
         .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; background: white; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { padding: 10px 6px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 13px; white-space: nowrap; }
@@ -80,7 +73,6 @@
         .rank-2 { background: #a0aec0; color: white; }
         .rank-3 { background: #ed8936; color: white; }
 
-        /* 시너지 카드 */
         .synergy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 10px; }
         .synergy-card { padding: 20px; border-radius: 16px; color: white; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .syn-duo { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
@@ -100,7 +92,6 @@
 
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
 
-        /* 커스텀 스크롤바 (웹킷 전용) */
         .match-list::-webkit-scrollbar { width: 6px; }
         .match-list::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 10px; }
     </style>
@@ -147,7 +138,7 @@
                             <th>👟 도움</th>
                             <th class="col-pts">공격P</th>
                             <th>출전</th>
-                            <th class="col-winrate">승률</th>
+                            <th class="col-winrate">승점률<br><span style="font-size:9px; color:#718096;">(승-무-패)</span></th>
                             <th>시간</th>
                             <th class="col-gd">+/-</th>
                         </tr>
@@ -161,7 +152,7 @@
 
         <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
             <div class="card-title" style="padding-left: 5px;">🕵️‍♂️ 데이터 팩트 폭행 (팀 시너지)</div>
-            <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px; padding-left: 5px;">* 억울한 에이스: 팀내 평균 공격P 이상이나 승률은 최하위.</p>
+            <p style="font-size: 12px; color: #718096; margin-top:-10px; margin-bottom:15px; padding-left: 5px;">* 억울한 에이스: 팀내 평균 공격P 이상이나 승점률은 최하위.</p>
             <div class="synergy-grid" id="synergyContainer">
                 <div class="loading">시너지 분석 중...</div>
             </div>
@@ -205,22 +196,14 @@
             const playersMap = {};
             playersData.forEach(p => playersMap[p.id] = p.name);
 
-            // =========================================================
-            // [개선 2] 최근 경기: 가장 최근 '일자'의 모든 경기를 렌더링
-            // =========================================================
             const recentContainer = document.getElementById('recentMatchesContainer');
             recentContainer.innerHTML = '';
             
             if (gamesData.length === 0) {
                 recentContainer.innerHTML = '<div style="padding:20px; text-align:center;">경기가 없습니다.</div>';
             } else {
-                // 가장 최신 경기의 날짜를 추출
                 const latestDate = gamesData[0].match_days.match_date;
-                
-                // 타이틀 업데이트
                 document.getElementById('recentMatchTitle').innerHTML = `📅 최근 모임 리포트 <span style="font-size:14px; color:#a0aec0; margin-left:8px;">(${latestDate})</span>`;
-
-                // 해당 날짜에 치러진 모든 경기만 필터링 (보통 6~8경기)
                 const recentGames = gamesData.filter(g => g.match_days.match_date === latestDate);
 
                 recentGames.forEach(game => {
@@ -290,11 +273,12 @@
             }
 
             // =========================================================
-            // 이하 스탯 연산 및 렌더링 로직 (V5와 동일)
+            // 스탯 연산 (무승부 기록 추가 및 승점률 계산 적용)
             // =========================================================
             const stats = {};
             playersData.forEach(p => {
-                stats[p.id] = { name: p.name, apps: 0, wins: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, mom: 0, mip: 0 };
+                // draws(무승부) 속성 추가
+                stats[p.id] = { name: p.name, apps: 0, wins: 0, draws: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, mom: 0, mip: 0 };
             });
 
             const gameTeams = {}; 
@@ -308,8 +292,11 @@
                     if (l.is_mip) pStat.mip += 1;
                     
                     const winner = (game.team_a_score > game.team_b_score) ? 'A' : (game.team_b_score > game.team_a_score) ? 'B' : 'DRAW';
+                    
+                    // 승, 무, 패 명확히 분리 기록
                     if (winner === l.team) pStat.wins += 1;
-                    else if (winner !== 'DRAW') pStat.losses += 1;
+                    else if (winner === 'DRAW') pStat.draws += 1;
+                    else pStat.losses += 1;
                     
                     const concededGoals = (l.team === 'A') ? game.team_b_score : game.team_a_score;
                     pStat.conceded += concededGoals;
@@ -335,11 +322,14 @@
             const statsArray = activePlayers.map(s => {
                 const points = s.goals + s.assists;
                 const gd = s.goals - s.conceded;
-                const winRate = s.apps > 0 ? Math.round((s.wins / s.apps) * 100) : 0;
+                
+                // 새로운 승점률 (Pts%) 계산: ((승*3 + 무*1) / (출전*3)) * 100
+                const ptsPercent = s.apps > 0 ? Math.round(((s.wins * 3 + s.draws * 1) / (s.apps * 3)) * 100) : 0;
+                
                 const avgGoals = (s.goals / s.apps).toFixed(2);
                 const avgAssists = (s.assists / s.apps).toFixed(2);
                 const avgPoints = (points / s.apps).toFixed(2);
-                return { ...s, points, gd, winRate, avgGoals, avgAssists, avgPoints };
+                return { ...s, points, gd, ptsPercent, avgGoals, avgAssists, avgPoints };
             });
 
             function renderAwardCard(title, icon, unit, dataArray, sortKey) {
@@ -406,7 +396,10 @@
                     <td style="font-weight:bold;">${s.assists}</td>
                     <td class="col-pts">${s.points}</td>
                     <td>${s.apps}</td>
-                    <td class="col-winrate">${s.winRate}% <span style="font-size:10px; color:#a0aec0;">(${s.wins}승)</span></td>
+                    <td class="col-winrate">
+                        ${s.ptsPercent}%<br>
+                        <span style="font-size:10px; color:#a0aec0;">(${s.wins}승${s.draws}무${s.losses}패)</span>
+                    </td>
                     <td style="color:#718096;">${s.playTime}</td>
                     <td class="col-gd" style="color:${gdColor}">${gdText}</td>
                 `;
@@ -426,9 +419,10 @@
                     for(let i=0; i<team.length; i++) {
                         for(let j=i+1; j<team.length; j++) {
                             const pair = [team[i], team[j]].sort().join('|');
-                            if (!duosObj[pair]) duosObj[pair] = { games: 0, wins: 0 };
+                            if (!duosObj[pair]) duosObj[pair] = { games: 0, wins: 0, draws: 0 };
                             duosObj[pair].games++;
                             if(winner === teamWinner) duosObj[pair].wins++;
+                            else if(winner === 'DRAW') duosObj[pair].draws++;
                         }
                     }
                 });
@@ -451,8 +445,8 @@
             for (const key in duosObj) {
                 if (duosObj[key].games >= minGames) {
                     const [id1, id2] = key.split('|');
-                    const rate = duosObj[key].wins / duosObj[key].games;
-                    duoArr.push({ names: `${playersMap[id1]}&${playersMap[id2]}`, rate, desc: `${Math.round(rate*100)}% (${duosObj[key].games}전)` });
+                    const dRate = Math.round(((duosObj[key].wins * 3 + duosObj[key].draws * 1) / (duosObj[key].games * 3)) * 100);
+                    duoArr.push({ names: `${playersMap[id1]}&${playersMap[id2]}`, rate: dRate, desc: `승점률 ${dRate}% (${duosObj[key].games}전)` });
                 }
             }
             duoArr.sort((a,b) => b.rate - a.rate);
@@ -468,8 +462,8 @@
             for (const key in nemesisObj) {
                 if (nemesisObj[key].games >= minGames) {
                     const [wId, lId] = key.split('|');
-                    const rate = nemesisObj[key].wins / nemesisObj[key].games;
-                    nemArr.push({ names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, rate, desc: `승률 ${Math.round(rate*100)}% (${nemesisObj[key].games}전)` });
+                    const nRate = nemesisObj[key].wins / nemesisObj[key].games;
+                    nemArr.push({ names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, rate: nRate, desc: `승률 ${Math.round(nRate*100)}% (${nemesisObj[key].games}전)` });
                 }
             }
             nemArr.sort((a,b) => b.rate - a.rate);
@@ -488,11 +482,11 @@
                 const teamAvgPts = activePlayers.reduce((sum, s) => sum + parseFloat(s.avgPoints), 0) / activePlayers.length;
                 activePlayers.forEach(s => {
                     if (s.apps >= minGames && parseFloat(s.avgPoints) >= teamAvgPts) {
-                        sadArr.push({ names: s.name, winRate: s.winRate, desc: `승률 ${Math.round(s.winRate)}% (Avg ${s.avgPoints}P)` });
+                        sadArr.push({ names: s.name, ptsPercent: s.ptsPercent, desc: `승점률 ${s.ptsPercent}% (Avg ${s.avgPoints}P)` });
                     }
                 });
             }
-            sadArr.sort((a,b) => a.winRate - b.winRate);
+            sadArr.sort((a,b) => a.ptsPercent - b.ptsPercent); // 승점률이 낮은 순 정렬
 
             function renderSynCard(title, icon, arr, cssClass, emptyMsg) {
                 if (arr.length === 0) return `<div class="synergy-card ${cssClass}"><div><div class="syn-icon">${icon}</div><div class="syn-title">${title}</div><div class="syn-players">데이터 부족</div></div><div class="syn-desc">${emptyMsg}</div></div>`;
