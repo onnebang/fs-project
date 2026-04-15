@@ -186,18 +186,32 @@
             const ptsPercent = myStat.apps > 0 ? Math.round(((myStat.wins * 3 + myStat.draws * 1) / (myStat.apps * 3)) * 100) : 0;
             const p90 = myStat.playTime > 0 ? ((myStat.goals / myStat.playTime) * 90).toFixed(2) : "0.00";
 
-            // 4. 육각형 차트 연산
+            // 4. 육각형 차트 연산 (상대 평가 방식으로 전면 개편)
             const totalTeamGames = gamesData.length; 
             function getScore(value, maxExpected) { return Math.min(100, Math.round((value / maxExpected) * 100)); }
             
-            const scoreFinishing = getScore(myStat.goals / myStat.apps, 2.0);
-            const scorePlaymaking = getScore(myStat.assists / myStat.apps, 1.5);
-            const scoreWinning = ptsPercent; // 승률 대신 승점률 점수 투입
-            const avgConc = myStat.conceded / myStat.apps;
-            const scoreDefense = Math.max(0, 100 - (avgConc * 20)); 
+            // 팀 전체의 데이터를 훑어서 각 항목별 '팀 내 1위'의 수치를 찾습니다. (최소 기준치 0.5 부여)
+            const activePlayers = Object.values(stats).filter(s => s.apps > 0);
+            const teamMaxAvgGoals = Math.max(...activePlayers.map(s => s.goals / s.apps), 0.5); 
+            const teamMaxAvgAssists = Math.max(...activePlayers.map(s => s.assists / s.apps), 0.5);
+            const teamMaxStarPower = Math.max(...activePlayers.map(s => (s.mom * 2 + s.mip) / s.apps), 0.5);
+
+            // 나의 수치 계산
+            const myAvgGoals = myStat.goals / myStat.apps;
+            const myAvgAssists = myStat.assists / myStat.apps;
+            const myStarPower = (myStat.mom * 2 + myStat.mip) / myStat.apps;
+            const myAvgConc = myStat.conceded / myStat.apps;
+
+            // 나의 수치를 팀 내 1위 수치와 비교하여 100점 만점으로 환산합니다.
+            const scoreFinishing = getScore(myAvgGoals, teamMaxAvgGoals);
+            const scorePlaymaking = getScore(myAvgAssists, teamMaxAvgAssists);
+            const scoreWinning = ptsPercent; // 승점률 점수 그대로 투입
+            
+            // 수비력: 기존 20을 곱해 너무 짜게 주던 것을 12로 완화하여 수비수들이 점수를 잘 받도록 조정
+            const scoreDefense = Math.max(0, Math.round(100 - (myAvgConc * 12))); 
+            
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
-            const starPower = (myStat.mom * 2 + myStat.mip) / myStat.apps; 
-            const scoreStar = getScore(starPower, 0.5); 
+            const scoreStar = getScore(myStarPower, teamMaxStarPower);
 
             let badgesHtml = '';
             if (scoreFinishing >= 80) badgesHtml += '<span class="badge">🔥 골잡이</span>';
