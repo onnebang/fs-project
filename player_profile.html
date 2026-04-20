@@ -229,7 +229,7 @@
             }
 
             // ③ 나머지 지표
-            const scoreWinning = winRate;
+            const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
             const starPower = (myStat.mom * 2 + myStat.mip) / myStat.apps; 
             const scoreStar = getScore(starPower, 0.5);
