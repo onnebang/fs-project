@@ -74,9 +74,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // Supabase 연동 (본인 키로 변경!)
-        // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -116,10 +113,10 @@
             const playersMap = {};
             playersRes.data.forEach(p => playersMap[p.id] = p.name);
 
-            // 2. 전체 선수 스탯 연산 (teamGoals 추가)
+            // 2. 전체 선수 스탯 연산 (draws 속성 추가)
             const stats = {};
             playersRes.data.forEach(p => {
-                stats[p.id] = { id: p.id, name: p.name, apps: 0, wins: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0, mom: 0, mip: 0 };
+                stats[p.id] = { id: p.id, name: p.name, apps: 0, wins: 0, draws: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0, mom: 0, mip: 0 };
             });
 
             const gameTeams = {}; 
@@ -136,14 +133,12 @@
                     
                     const winner = (game.team_a_score > game.team_b_score) ? 'A' : (game.team_b_score > game.team_a_score) ? 'B' : 'DRAW';
                     if (winner === l.team) pStat.wins += 1;
-                    else if (winner !== 'DRAW') pStat.losses += 1;
+                    else if (winner === 'DRAW') pStat.draws += 1;
+                    else pStat.losses += 1;
                     
                     pStat.conceded += (l.team === 'A') ? game.team_b_score : game.team_a_score;
-                    
-                    // 🔥 [신규 추가] 내가 뛸 때 우리 팀이 넣은 총 득점 계산
                     pStat.teamGoals += (l.team === 'A') ? game.team_a_score : game.team_b_score;
 
-                    // ...(기존 gameTeams 및 myGames 로직 그대로 유지)
                     if (!gameTeams[l.game_id]) gameTeams[l.game_id] = { A: [], B: [], winner: winner, game: game };
                     if (gameTeams[l.game_id][l.team]) gameTeams[l.game_id][l.team].push(l.player_id);
 
@@ -174,7 +169,7 @@
                 }
             });
 
-            // 3. 내 스탯 계산 (승률 대신 승점률 적용)
+            // 3. 내 스탯 계산
             const myStat = stats[targetId];
             if (myStat.apps === 0) {
                 return document.getElementById('app').innerHTML = `
@@ -187,24 +182,20 @@
             const ptsPercent = myStat.apps > 0 ? Math.round(((myStat.wins * 3 + myStat.draws * 1) / (myStat.apps * 3)) * 100) : 0;
             const p90 = myStat.playTime > 0 ? ((myStat.goals / myStat.playTime) * 90).toFixed(2) : "0.00";
 
-            // 4. 육각형 차트 연산 (가중치 및 상대 평가 도입)
+            // 4. 육각형 차트 연산
             const activePlayers = Object.values(stats).filter(s => s.apps > 0);
             const totalTeamGames = gamesData.length; 
 
-            // 팀 전체의 기준점(Max/Min)을 찾기 위한 사전 연산
             activePlayers.forEach(s => {
                 s.avgGoals = s.goals / s.apps;
                 s.avgAssists = s.assists / s.apps;
                 s.avgConc = s.conceded / s.apps;
                 s.avgTeamGoals = s.teamGoals / s.apps;
 
-                // [공격 지수] 본인 득점(가중치3) + 팀 득점 관여(가중치1)
                 s.offenseFactor = (s.avgGoals * 3) + (s.avgTeamGoals * 1);
-                // [패스 지수] 본인 도움(가중치3) + 본인 득점(가중치1) + 팀 득점 관여(가중치0.5)
                 s.passFactor = (s.avgAssists * 3) + (s.avgGoals * 1) + (s.avgTeamGoals * 0.5);
             });
 
-            // 팀 내 1위 기준 및 수비력 편차 기준 확보
             const maxOffense = Math.max(...activePlayers.map(s => s.offenseFactor));
             const maxPass = Math.max(...activePlayers.map(s => s.passFactor));
             const minConc = Math.min(...activePlayers.map(s => s.avgConc));
@@ -212,23 +203,19 @@
 
             function getScore(value, maxExpected) { return Math.min(100, Math.round((value / maxExpected) * 100)); }
             
-            // 내 스탯 추출 (사전 연산된 데이터 활용)
             const myCalcStat = activePlayers.find(s => s.id === targetId);
 
-            // ① 공격력 & 패스 (팀 내 1위와 비교)
             const scoreOffense = maxOffense > 0 ? getScore(myCalcStat.offenseFactor, maxOffense) : 0;
             const scorePass = maxPass > 0 ? getScore(myCalcStat.passFactor, maxPass) : 0;
             
-            // ② 수비력 (최악 40점 ~ 최고 100점 상대 평가 스케일링)
             let scoreDefense = 100;
             if (maxConc > minConc) {
                 const concRatio = (myCalcStat.avgConc - minConc) / (maxConc - minConc);
                 scoreDefense = Math.max(40, Math.round(100 - (concRatio * 60))); 
             } else {
-                scoreDefense = 70; // 모두 실점이 같을 경우
+                scoreDefense = 70; 
             }
 
-            // ③ 나머지 지표
             const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
             const starPower = (myStat.mom * 2 + myStat.mip) / myStat.apps; 
@@ -242,7 +229,7 @@
             if (ptsPercent >= 50) badgesHtml += '<span class="badge">🍀 승점요정</span>';
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
 
-            // 5. 관계도 (승점률 기반 업그레이드)
+            // 5. 관계도
             const duoStats = {}; 
             const enemyStats = {}; 
             const assistStats = {}; 
@@ -284,7 +271,6 @@
                 }
             });
 
-            // 시너지 & 천적 계산 함수 (승점률 기반)
             function getTopRelation(statsObj, isRate, type, minGames = 2) {
                 let best = null;
                 let maxVal = -1;
@@ -422,11 +408,9 @@
             new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    // 라벨 이름을 변경합니다
                     labels: ['공격력(Offense)', '패스(Pass)', '승점요정(Pts%)', '수비력(Def)', '성실함(App)', '스타성(Star)'],
                     datasets: [{
                         label: targetName + ' 능력치',
-                        // 변수명을 위에서 수정한 것으로 맞춰줍니다
                         data: [scoreOffense, scorePass, scoreWinning, scoreDefense, scoreAttendance, scoreStar],
                         backgroundColor: 'rgba(49, 130, 206, 0.4)',
                         borderColor: '#3182ce',
