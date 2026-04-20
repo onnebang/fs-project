@@ -113,7 +113,7 @@
             const playersMap = {};
             playersRes.data.forEach(p => playersMap[p.id] = p.name);
 
-            // 2. 전체 선수 스탯 연산 (draws 속성 추가)
+            // 1. 전체 선수 스탯 초기화 (draws 명시적 포함)
             const stats = {};
             playersRes.data.forEach(p => {
                 stats[p.id] = { id: p.id, name: p.name, apps: 0, wins: 0, draws: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0, mom: 0, mip: 0 };
@@ -169,7 +169,6 @@
                 }
             });
 
-            // 3. 내 스탯 계산
             const myStat = stats[targetId];
             if (myStat.apps === 0) {
                 return document.getElementById('app').innerHTML = `
@@ -182,31 +181,27 @@
             const ptsPercent = myStat.apps > 0 ? Math.round(((myStat.wins * 3 + myStat.draws * 1) / (myStat.apps * 3)) * 100) : 0;
             const p90 = myStat.playTime > 0 ? ((myStat.goals / myStat.playTime) * 90).toFixed(2) : "0.00";
 
-            // 4. 육각형 차트 연산 (가중치 및 상대 평가 도입)
+            // 2. 육각형 차트 연산
             const activePlayers = Object.values(stats).filter(s => s.apps > 0);
             const totalTeamGames = gamesData.length; 
 
-            // 팀 전체의 기준점(Max/Min)을 찾기 위한 사전 연산
             activePlayers.forEach(s => {
                 s.avgGoals = s.goals / s.apps;
                 s.avgAssists = s.assists / s.apps;
                 s.avgConc = s.conceded / s.apps;
                 s.avgTeamGoals = s.teamGoals / s.apps;
 
-                // [공격 지수] 본인 득점(가중치3) + 팀 득점 관여(가중치1)
                 s.offenseFactor = (s.avgGoals * 3) + (s.avgTeamGoals * 1);
-                // [패스 지수] 본인 도움(가중치3) + 본인 득점(가중치1) + 팀 득점 관여(가중치0.5)
                 s.passFactor = (s.avgAssists * 3) + (s.avgGoals * 1) + (s.avgTeamGoals * 0.5);
-                // [스타성 지수] MOM(가중치2) + MIP(가중치1)의 경기당 평균
-                s.starFactor = (s.mom * 2 + s.mip) / s.apps;
+                
+                // [스타성 지수] 비율에 누적 횟수(0.1 가중치)를 더해 동점자 분별력 강화
+                s.starFactor = ((s.mom * 3 + s.mip * 1) / s.apps) + (s.mom * 0.1);
             });
 
-            // 팀 내 1위 기준 확보
             const maxOffense = Math.max(...activePlayers.map(s => s.offenseFactor));
             const maxPass = Math.max(...activePlayers.map(s => s.passFactor));
             const maxStar = Math.max(...activePlayers.map(s => s.starFactor));
 
-            // 수비력 기준: 출전 수가 적은 선수의 무실점이 전체 기준을 망치는 것을 방지 (최소 2경기 이상)
             const validDefPlayers = activePlayers.filter(s => s.apps >= 2);
             const defPool = validDefPlayers.length > 0 ? validDefPlayers : activePlayers;
             const minConc = Math.min(...defPool.map(s => s.avgConc));
@@ -216,15 +211,12 @@
             
             const myCalcStat = activePlayers.find(s => s.id === targetId);
 
-            // ① 공격력, 패스, 스타성 (팀 내 1위와 상대 비교)
             const scoreOffense = maxOffense > 0 ? getScore(myCalcStat.offenseFactor, maxOffense) : 0;
             const scorePass = maxPass > 0 ? getScore(myCalcStat.passFactor, maxPass) : 0;
             const scoreStar = maxStar > 0 ? getScore(myCalcStat.starFactor, maxStar) : 0;
             
-            // ② 수비력 (최악 40점 ~ 최고 100점 상대 평가 스케일링, 평균 실점이 높을수록 낮게)
             let scoreDefense = 100;
             if (maxConc > minConc) {
-                // 내 평균 실점을 정상 범위 내로 제한 (1경기 출전자의 편차 대비)
                 const clampedMyConc = Math.max(minConc, Math.min(maxConc, myCalcStat.avgConc));
                 const concRatio = (clampedMyConc - minConc) / (maxConc - minConc);
                 scoreDefense = Math.max(40, Math.round(100 - (concRatio * 60))); 
@@ -232,7 +224,6 @@
                 scoreDefense = 70; 
             }
 
-            // ③ 나머지 지표
             const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
 
@@ -243,7 +234,8 @@
             if (myStat.mom >= 2) badgesHtml += '<span class="badge">⭐ 크랙</span>';
             if (ptsPercent >= 50) badgesHtml += '<span class="badge">🍀 승점요정</span>';
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
-            // 5. 관계도
+
+            // 3. 관계도 (천적 승점률 하락 로직으로 변경)
             const duoStats = {}; 
             const enemyStats = {}; 
             const assistStats = {}; 
@@ -268,36 +260,36 @@
                         }
                     });
                     enemyTeamArr.forEach(id => {
-                        if(!enemyStats[id]) enemyStats[id] = { games:0, losses:0, draws:0 };
+                        if(!enemyStats[id]) enemyStats[id] = { games:0, myWins:0, myLosses:0, myDraws:0 };
                         enemyStats[id].games++;
-                        if (winner !== myTeamWinner && winner !== 'DRAW') enemyStats[id].losses++;
-                        else if (winner === 'DRAW') enemyStats[id].draws++;
+                        if (winner === myTeamWinner) enemyStats[id].myWins++; // 내가 이김
+                        else if (winner === 'DRAW') enemyStats[id].myDraws++; // 내가 비김
+                        else enemyStats[id].myLosses++; // 내가 짐
                     });
                 }
             }
 
             goalsRes.data.forEach(g => {
-                if (g.scorer_id === targetId && g.assist_id) {
-                    assistStats[g.assist_id] = (assistStats[g.assist_id] || 0) + 1; 
-                }
-                if (g.assist_id === targetId && g.scorer_id && !g.is_own_goal) {
-                    assistStats[g.scorer_id] = (assistStats[g.scorer_id] || 0) + 1; 
-                }
+                if (g.scorer_id === targetId && g.assist_id) assistStats[g.assist_id] = (assistStats[g.assist_id] || 0) + 1; 
+                if (g.assist_id === targetId && g.scorer_id && !g.is_own_goal) assistStats[g.scorer_id] = (assistStats[g.scorer_id] || 0) + 1; 
             });
 
             function getTopRelation(statsObj, isRate, type, minGames = 2) {
                 let best = null;
                 let maxVal = -1;
+                let minVal = 999;
                 for (const id in statsObj) {
                     if (isRate) {
                         if (statsObj[id].games >= minGames) {
                             let val = 0;
                             if (type === 'duo') {
                                 val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1) / (statsObj[id].games * 3)) * 100;
+                                if (val > maxVal) { maxVal = val; best = { id, val: Math.round(val), games: statsObj[id].games }; }
                             } else if (type === 'enemy') {
-                                val = ((statsObj[id].losses * 3 + statsObj[id].draws * 1) / (statsObj[id].games * 3)) * 100;
+                                // 천적: 내가 그 사람을 만났을 때 '내 승점률'이 가장 낮은 사람
+                                val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1) / (statsObj[id].games * 3)) * 100;
+                                if (val < minVal) { minVal = val; best = { id, val: Math.round(val), games: statsObj[id].games }; }
                             }
-                            if (val > maxVal) { maxVal = val; best = { id, val: Math.round(val), games: statsObj[id].games }; }
                         }
                     } else {
                         if (statsObj[id] > maxVal) { maxVal = statsObj[id]; best = { id, val: statsObj[id] }; }
@@ -310,7 +302,6 @@
             const worstEnemy = getTopRelation(enemyStats, true, 'enemy');
             const bestPartner = getTopRelation(assistStats, false, 'assist');
 
-            // 6. 타임라인
             let timelineHtml = '';
             myGames.slice(0, 5).forEach(mg => {
                 const isFriendly = mg.gameInfo.match_days.match_type === '교류전';
@@ -345,7 +336,6 @@
                 `;
             });
 
-            // 7. UI 조립
             document.getElementById('app').innerHTML = `
                 <div class="top-nav">
                     <a href="index.html" class="back-btn">←</a>
@@ -394,10 +384,12 @@
                         <div class="relation-item">
                             <div class="relation-icon">⚔️</div>
                             <div class="relation-info">
-                                <div class="relation-title">나의 천적 (적군 조우 시 상대 승점률)</div>
+                                <div class="relation-title">나의 천적 (적군 조우 시 내 승점률 하락)</div>
                                 <div class="relation-target">${worstEnemy ? playersMap[worstEnemy.id] : '데이터 부족'}</div>
                             </div>
-                            <div class="relation-stat stat-bad">${worstEnemy ? `${worstEnemy.val}%` : '-'}</div>
+                            <div class="relation-stat stat-bad" style="font-size:12px; text-align:right; line-height:1.3;">
+                                ${worstEnemy ? `<span style="color:#a0aec0; text-decoration:line-through;">기존 ${ptsPercent}%</span><br><span style="font-size:15px; color:#e53e3e;">➡️ ${worstEnemy.val}%</span>` : '-'}
+                            </div>
                         </div>
 
                         <div class="relation-item" style="margin-bottom:0;">
@@ -417,7 +409,6 @@
                 </div>
             `;
 
-            // 레이더 차트 그리기
             const ctx = document.getElementById('radarChart').getContext('2d');
             new Chart(ctx, {
                 type: 'radar',
