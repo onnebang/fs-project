@@ -545,7 +545,6 @@
                     const [wId, lId] = key.split('|'); // wId가 lId를 적으로 만났을 때
                     const vsPtsPercent = ((nemesisObj[key].wins * 3 + nemesisObj[key].draws * 1) / (nemesisObj[key].games * 3)) * 100;
                     
-                    // ✨ 수정된 부분: String(s.id)를 사용하여 문자열끼리 비교하도록 타입 불일치 해결
                     const wStat = statsArray.find(s => String(s.id) === wId);
                     const basePtsPercent = wStat ? wStat.ptsPercent : 0;
                     
@@ -553,9 +552,11 @@
                     
                     if (drop > 0) { // 승점률이 깎이는 경우만
                         nemArr.push({ 
-                            names: `${playersMap[wId]} ⚔️ ${playersMap[lId]}`, 
+                            // ✨ 누가 피해자인지 명확하게 분리! (ex. 효린 😭 [vs 혜린])
+                            names: `${playersMap[wId]} 😭 <span style="font-size:11px; font-weight:normal; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:6px; vertical-align:middle; margin-left:4px;">vs ${playersMap[lId]}</span>`, 
                             drop: drop, 
-                            desc: `<span style="font-size:11px; color:#a0aec0; text-decoration:line-through; font-weight:normal;">기존 ${Math.round(basePtsPercent)}%</span> ➡️ <span style="font-size:14px; color:#e53e3e; font-weight:900;">${Math.round(vsPtsPercent)}%</span>` 
+                            // ✨ 보라색 배경에서 더 잘 보이도록 밝은 빨간색(#ff8a8a)으로 변경
+                            desc: `<span style="font-size:11px; color:rgba(255,255,255,0.6); text-decoration:line-through; font-weight:normal;">기존 ${Math.round(basePtsPercent)}%</span> <span style="font-size:14px; color:#ff8a8a; font-weight:900; margin-left:2px;">➡️ ${Math.round(vsPtsPercent)}%</span>` 
                         });
                     }
                 }
