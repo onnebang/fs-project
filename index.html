@@ -93,6 +93,22 @@
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
         .match-list::-webkit-scrollbar { width: 6px; }
         .match-list::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 10px; }
+        /* ✨ 프리미엄 로딩 애니메이션 (Fade In & Slide Up) */
+        @keyframes smoothLoad {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 헤더는 즉시 스르륵 나타남 */
+        .header {
+            animation: smoothLoad 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* 아래 내용물(컨테이너)은 0.2초 딜레이를 주어 순차적으로 나타나게 함 (더 고급스러움!) */
+        .container {
+            opacity: 0; /* 처음에 투명하게 숨김 */
+            animation: smoothLoad 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards;
+        }
     </style>
 </head>
 <body>
