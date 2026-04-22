@@ -451,17 +451,18 @@
                         borderWidth: 2,
                     }]
                 },
+                // 🔥 육각형 차트 스케일 및 역주행 버그 보정
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         r: {
-                            min: 20,  // 시작점을 0에서 20으로 올려서 시각적으로 꽉 차 보이게 함
+                            min: 0,   // 마이너스로 뚫고 나가지 않도록 0으로 복구
                             max: 100,
                             angleLines: { color: 'rgba(0,0,0,0.1)' },
                             grid: { color: 'rgba(0,0,0,0.1)' },
                             pointLabels: { font: { family: 'Pretendard', size: 12, weight: 'bold' }, color: '#4a5568' },
-                            ticks: { display: false, stepSize: 20 }
+                            ticks: { display: false, stepSize: 25 } // 25점 단위로 4구역(25, 50, 75, 100) 분할
                         }
                     },
                     plugins: {
