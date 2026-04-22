@@ -545,7 +545,8 @@
                     const [wId, lId] = key.split('|'); // wId가 lId를 적으로 만났을 때
                     const vsPtsPercent = ((nemesisObj[key].wins * 3 + nemesisObj[key].draws * 1) / (nemesisObj[key].games * 3)) * 100;
                     
-                    const wStat = statsArray.find(s => s.id === wId);
+                    // ✨ 수정된 부분: String(s.id)를 사용하여 문자열끼리 비교하도록 타입 불일치 해결
+                    const wStat = statsArray.find(s => String(s.id) === wId);
                     const basePtsPercent = wStat ? wStat.ptsPercent : 0;
                     
                     const drop = basePtsPercent - vsPtsPercent; // 하락폭 계산
