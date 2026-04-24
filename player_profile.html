@@ -437,35 +437,60 @@
                 if (g.assist_id === targetId && g.scorer_id && !g.is_own_goal) assistStats[g.scorer_id] = (assistStats[g.scorer_id] || 0) + 1; 
             });
 
-            function getTopRelations(statsObj, isRate, type, minGames = 2) {
+            // ✨ 컷오프 기준선(basePercent)을 변수로 받아 필터링하는 로직으로 강화
+            function getTopRelations(statsObj, isRate, type, basePercent = 0, minGames = 2) {
                 let results = [];
                 for (const id in statsObj) {
                     if (isRate) {
                         if (statsObj[id].games >= minGames) {
                             let val = 0;
-                            if (type === 'duo') val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1.5) / (statsObj[id].games * 3)) * 100;
-                            else if (type === 'enemy') val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1.5) / (statsObj[id].games * 3)) * 100;
-                            results.push({ id, val: Math.round(val), games: statsObj[id].games });
+                            if (type === 'duo') {
+                                val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1.5) / (statsObj[id].games * 3)) * 100;
+                                val = Math.round(val);
+                                // 🔥 파트너: 내 기본 승점률보다 "높을 때만" 리스트에 추가!
+                                if (val > basePercent) {
+                                    results.push({ id, val, games: statsObj[id].games });
+                                }
+                            } else if (type === 'enemy') {
+                                val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1.5) / (statsObj[id].games * 3)) * 100;
+                                val = Math.round(val);
+                                // 🔥 천적: 내 기본 승점률보다 "낮을 때만" 리스트에 추가!
+                                if (val < basePercent) {
+                                    results.push({ id, val, games: statsObj[id].games });
+                                }
+                            }
                         }
                     } else {
+                        // 영혼의 단짝(어시스트)은 승점률 비교가 아니므로 무조건 추가
                         results.push({ id, val: statsObj[id] });
                     }
                 }
+                
+                // 정렬 로직
                 if (isRate) {
-                    if (type === 'duo') results.sort((a, b) => b.val - a.val); 
-                    else if (type === 'enemy') results.sort((a, b) => a.val - b.val); 
+                    if (type === 'duo') results.sort((a, b) => b.val - a.val); // 높은 순
+                    else if (type === 'enemy') results.sort((a, b) => a.val - b.val); // 낮은 순
                 } else {
-                    results.sort((a, b) => b.val - a.val); 
+                    results.sort((a, b) => b.val - a.val); // 득점 합작 높은 순
                 }
+                
                 return results.slice(0, 5); 
             }
 
-            const bestDuos = getTopRelations(duoStats, true, 'duo');
-            const worstEnemies = getTopRelations(enemyStats, true, 'enemy');
-            const bestPartners = getTopRelations(assistStats, false, 'assist');
+            // 🔥 함수 호출 시 내 기본 승점률(ptsPercent)을 전달하도록 수정
+            const bestDuos = getTopRelations(duoStats, true, 'duo', ptsPercent);
+            const worstEnemies = getTopRelations(enemyStats, true, 'enemy', ptsPercent);
+            const bestPartners = getTopRelations(assistStats, false, 'assist', 0);
 
             function renderRelationList(arr, type, basePercent) {
-                if (!arr || arr.length === 0) return '<div style="color:#a0aec0; font-size:13px; text-align:center; padding:15px 0; width:100%;">충분한 데이터가 없습니다. (최소 2경기)</div>';
+                // 데이터가 없을 때의 안내 메시지도 상황에 맞게 수정
+                if (!arr || arr.length === 0) {
+                    let emptyMsg = "충분한 데이터가 없습니다. (최소 2경기)";
+                    if (type === 'duo') emptyMsg = "승률을 끌어올려주는 파트너가 아직 없습니다.";
+                    if (type === 'enemy') emptyMsg = "승률을 깎아먹는 천적이 아직 없습니다!";
+                    return `<div style="color:#a0aec0; font-size:13px; text-align:center; padding:15px 0; width:100%;">${emptyMsg}</div>`;
+                }
+                
                 let html = '<div style="display:flex; flex-direction:column; gap:8px; width:100%;">';
                 arr.forEach((item, idx) => {
                     const name = playersMap[item.id];
