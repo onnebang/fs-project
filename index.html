@@ -32,12 +32,13 @@
         .match-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
         .match-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         .match-info { font-size: 12px; font-weight: bold; color: #718096; margin-bottom: 8px; text-align: center; }
-        .match-score-wrap { display: flex; justify-content: center; align-items: center; gap: 15px; width: 100%; }
-        .m-team { font-size: 15px; font-weight: 900; flex: 1; }
+        /* ✨ 모바일 가시성 개선: 중앙 여백을 줄이고 긴 이름이 예쁘게 나오도록 조정 */
+        .match-score-wrap { display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%; }
+        .m-team { font-size: 14px; font-weight: 900; flex: 1; line-height: 1.2; word-break: keep-all; letter-spacing: -0.5px; }
         .m-team.a { text-align: right; color: #3182ce; }
         .m-team.b { text-align: left; color: #e53e3e; }
-        .m-score { font-size: 20px; font-weight: 900; background: white; padding: 4px 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .m-vs { font-size: 12px; font-weight: bold; color: #a0aec0; }
+        .m-score { font-size: 18px; font-weight: 900; background: white; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 18px; text-align: center; }
+        .m-vs { font-size: 11px; font-weight: bold; color: #a0aec0; margin: 0 2px; }
         
         .match-details { display: none; padding: 15px; border-top: 1px dashed #e2e8f0; background: white; font-size: 13px; }
         .detail-row { margin-bottom: 15px; }
