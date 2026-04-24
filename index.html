@@ -32,7 +32,6 @@
         .match-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
         .match-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         .match-info { font-size: 12px; font-weight: bold; color: #718096; margin-bottom: 8px; text-align: center; }
-        /* ✨ 모바일 가시성 개선: 중앙 여백을 줄이고 긴 이름이 예쁘게 나오도록 조정 */
         .match-score-wrap { display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%; }
         .m-team { font-size: 14px; font-weight: 900; flex: 1; line-height: 1.2; word-break: keep-all; letter-spacing: -0.5px; }
         .m-team.a { text-align: right; color: #3182ce; }
@@ -70,7 +69,7 @@
         th:nth-child(1), td:nth-child(1) { position: sticky; left: 0; background: white; z-index: 20; min-width: 45px; max-width: 45px; box-sizing: border-box; }
         th:nth-child(1) { background: #f7fafc; z-index: 30; }
         
-        /* ✨ 2열 (이름) 좌측 고정 (1열 폭인 45px만큼 띄워서 고정!) */
+        /* ✨ 2열 (이름) 좌측 고정 */
         th:nth-child(2), td:nth-child(2) { position: sticky; left: 45px; background: white; z-index: 20; border-right: 2px solid #cbd5e0; text-align: left; padding-left: 8px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
         th:nth-child(2) { background: #f7fafc; z-index: 30; }
         
@@ -103,30 +102,62 @@
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
         .match-list::-webkit-scrollbar { width: 6px; }
         .match-list::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 10px; }
-        /* ✨ 미니 전술판 (index.html 용) */
-        .mini-pitch { background: #276749; border: 2px solid white; border-radius: 8px; padding: 5px; position: relative; margin-top: 10px; overflow: hidden; max-width: 250px; margin-left: auto; margin-right: auto; }
-        .mini-pitch::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.4); }
-        .mini-pitch::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
-        .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; position: relative; z-index: 2; }
-        .mini-cell { height: 35px; display: flex; justify-content: center; align-items: center; }
-        .mini-marker { background: white; color: #2d3748; font-size: 11px; font-weight: 900; padding: 3px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap; }
-        .mini-marker.gk { background: #ecc94b; color: #744210; }
-        .unplaced-list { text-align: center; font-size: 11px; color: #a0aec0; margin-top: 8px; }
+
+        /* ✨ 미니 전술판 (네이버/다음 스포츠 스타일 적용) */
+        .mini-pitch { 
+            background: #2b8a3e; /* 산뜻한 잔디색 */
+            border: 2px solid rgba(255,255,255,0.8); 
+            border-radius: 12px; 
+            padding: 10px 5px; 
+            position: relative; 
+            margin-top: 10px; 
+            overflow: hidden; 
+            max-width: 280px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .mini-pitch::before { 
+            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.3); 
+        }
+        .mini-pitch::after { 
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; 
+        }
+        .mini-grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 4px; position: relative; z-index: 2; 
+        }
+        .mini-cell { 
+            height: 45px; display: flex; justify-content: center; align-items: center; flex-direction: column; 
+        }
+        .mini-marker { 
+            background: rgba(255, 255, 255, 0.95); 
+            color: #1a202c; 
+            font-size: 11px; 
+            font-weight: 900; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2); 
+            white-space: nowrap; 
+            border: 1px solid rgba(0,0,0,0.1);
+            letter-spacing: -0.5px;
+        }
+        .mini-marker.gk { 
+            background: #ecc94b; color: #744210; border-color: #d69e2e; 
+        }
+        .unplaced-list { 
+            text-align: center; font-size: 11px; color: #a0aec0; margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.3); 
+        }
         
         /* ✨ 프리미엄 로딩 애니메이션 (Fade In & Slide Up) */
         @keyframes smoothLoad {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-
-        /* 헤더는 즉시 스르륵 나타남 */
         .header {
             animation: smoothLoad 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
-
-        /* 아래 내용물(컨테이너)은 0.2초 딜레이를 주어 순차적으로 나타나게 함 (더 고급스러움!) */
         .container {
-            opacity: 0; /* 처음에 투명하게 숨김 */
+            opacity: 0; 
             animation: smoothLoad 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards;
         }
     </style>
@@ -196,11 +227,12 @@
 
     <script>
         // ==========================================
-        // Supabase 연동 (본인 키로 변경!)
+        // Supabase 연동 (본인 키로 유지!)
         // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        
         window.onload = () => { loadAllData(); };
 
         function toggleMatchDetails(id) {
@@ -215,7 +247,6 @@
         async function loadAllData() {
             
             const [playersRes, gamesRes, lineupsRes, goalsRes] = await Promise.all([
-                // ✨ affiliation(소속) 컬럼도 가져오도록 추가했습니다!
                 supabaseClient.from('players').select('id, name, is_guest, affiliation'),
                 supabaseClient.from('games').select('*, match_days(match_date, match_type, opponent)').order('created_at', { ascending: false }),
                 supabaseClient.from('game_lineups').select('*'),
@@ -232,14 +263,13 @@
             const goalsData = goalsRes.data;
 
             const playersMap = {};
-            const affiliationMap = {}; // ✨ 소속팀 정보를 담을 새로운 맵 추가
+            const affiliationMap = {}; 
 
             playersData.forEach(p => {
                 playersMap[p.id] = p.name;
-                affiliationMap[p.id] = p.affiliation; // DB에서 가져온 소속팀 저장
+                affiliationMap[p.id] = p.affiliation;
             });
 
-            // ✨ 다수결로 팀 이름을 결정해주는 마법의 함수 추가!
             function getMajorityTeamName(lineup) {
                 const counts = {};
                 let maxCount = 0;
@@ -276,7 +306,6 @@
                     let teamAName = isFriendly ? '풉살팀' : 'A팀';
                     let teamBName = isFriendly ? (game.match_days.opponent || '상대팀') : 'B팀';
 
-                    // 출전 명단 필터링
                     const lineupA_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'A');
                     const lineupB_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'B');
 
@@ -287,7 +316,7 @@
                         if (majorityB) teamBName = majorityB;
                     }
 
-                    // ✨ 미니 전술판 생성 함수
+                    // ✨ 미니 전술판 생성 함수 (네이버/다음 스포츠 스타일 렌더링)
                     function buildMiniPitch(lineupRaw) {
                         const zones = ['Pivo_L', 'Pivo', 'Pivo_R', 'Ala_L', 'C_Ala', 'Ala_R', 'Fixo_L', 'Fixo', 'Fixo_R', 'Blank1', 'GK', 'Blank2'];
                         let pitchHtml = `<div class="mini-pitch"><div class="mini-grid">`;
@@ -320,7 +349,6 @@
 
                     const lineupAHtml = buildMiniPitch(lineupA_raw);
                     const lineupBHtml = isFriendly ? '<div class="lineup-text" style="text-align:center;">상대팀 명단 생략</div>' : buildMiniPitch(lineupB_raw);
-
 
                     let lineupA = [], lineupB = [];
                     lineupA_raw.forEach(l => {
@@ -375,7 +403,7 @@
                                 </div>
                                 <div class="detail-row" style="margin-bottom:0;">
                                     <div class="detail-title" style="color:#e53e3e;">${teamBName} 출전 (${isFriendly ? '미상' : lineupB.length+'명'})</div>
-                                    <div class="lineup-text">${isFriendly ? '상대팀 명단 생략' : lineupB.join(', ')}</div>
+                                    <div class="lineup-text">${lineupBHtml}</div>
                                     <div style="margin-top:8px;">${goalsBHtml}</div>
                                 </div>
                             </div>
@@ -390,16 +418,14 @@
             // =========================================================
             const stats = {};
             playersData.forEach(p => {
-                // ✨ id: p.id 를 추가하여 천적 매칭 시 ID를 찾을 수 있도록 복구했습니다!
                 stats[p.id] = { id: p.id, name: p.name, apps: 0, wins: 0, draws: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0, mom: 0, mip: 0, matchResults: [] };
             });
 
             const gameTeams = {}; 
             
-            // gamesData는 이미 최신순(DESC)으로 정렬되어 있으므로, 이 순서대로 돌리면 배열의 0번 인덱스가 가장 최신 경기가 됩니다.
             gamesData.forEach(game => {
                 const gameLineups = lineupsData.filter(l => l.game_id === game.id);
-                if (gameLineups.length === 0) return; // 라인업이 없는 경기는 패스
+                if (gameLineups.length === 0) return; 
                 
                 const winner = (game.team_a_score > game.team_b_score) ? 'A' : (game.team_b_score > game.team_a_score) ? 'B' : 'DRAW';
                 gameTeams[game.id] = { A: [], B: [], winner: winner };
@@ -417,7 +443,6 @@
                         else if (winner === 'DRAW') { pStat.draws += 1; res = 'D'; }
                         else { pStat.losses += 1; res = 'L'; }
                         
-                        // 이 선수의 결과 배열에 최신 결과부터 차곡차곡 밀어 넣습니다.
                         pStat.matchResults.push(res); 
                         
                         pStat.conceded += (l.team === 'A') ? game.team_b_score : game.team_a_score;
@@ -449,11 +474,9 @@
                 const avgAssists = (s.assists / s.apps).toFixed(2);
                 const avgPoints = (points / s.apps).toFixed(2);
 
-                // 🔥 연속 기록(Streak) 연산 로직
                 let w=0, d=0, l=0;
-                let streakType = null; // 'unbeaten' (무패), 'winless' (무승), 'draws' (연무)
+                let streakType = null; 
                 
-                // 가장 최근에 한 경기 결과로 연승/연패 모드를 판별합니다.
                 let firstNonDraw = s.matchResults.find(r => r !== 'D');
                 if (!firstNonDraw) streakType = 'draws';
                 else if (firstNonDraw === 'W') streakType = 'unbeaten';
@@ -466,7 +489,7 @@
                         if(res === 'L') l++; else d++;
                     } else if (streakType === 'draws' && res === 'D') {
                         d++;
-                    } else break; // 기록이 끊기면 스톱
+                    } else break; 
                 }
 
                 let streakText = '<span style="color:#a0aec0;">-</span>';
@@ -480,7 +503,6 @@
                     streakText = `<span style="color:#718096; font-weight:bold;">${d}연무</span>`;
                 }
 
-                // 🔥 최근 5경기 폼 (오른쪽이 최신 경기이도록 reverse)
                 let recent5 = s.matchResults.slice(0, 5).reverse();
                 let formHtml = recent5.map(r => {
                     if(r === 'W') return `<span style="display:inline-flex; justify-content:center; align-items:center; width:18px; height:18px; border-radius:4px; background:#38a169; color:white; font-size:10px; font-weight:900; margin:1px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">승</span>`;
@@ -533,13 +555,11 @@
             `;
 
             // ---------------------------------------------------------
-            // 🔥 [신규 추가] 이전 회차(가장 최근 모임일 이전) 랭킹 역산 로직
+            // 🔥 이전 회차 랭킹 역산 로직
             // ---------------------------------------------------------
-            // 1. 가장 최근 모임일 구하기 (gamesData는 이미 최신순 정렬됨)
             const distinctDates = [...new Set(gamesData.map(g => g.match_days.match_date))];
             const latestDateStr = distinctDates.length > 0 ? distinctDates[0] : null;
             
-            // 2. 최근 모임일을 제외한 과거 경기들만 필터링
             const prevGames = gamesData.filter(g => g.match_days.match_date !== latestDateStr);
             const prevGameIds = prevGames.map(g => g.id);
 
@@ -548,7 +568,6 @@
                 prevStats[p.id] = { id: p.id, apps: 0, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0 };
             });
 
-            // 3. 과거 기록으로 스탯 재계산
             lineupsData.filter(l => prevGameIds.includes(l.game_id)).forEach(l => {
                 const pStat = prevStats[l.player_id];
                 const game = prevGames.find(g => g.id === l.game_id);
@@ -577,7 +596,6 @@
                 return { ...s, points, gd, ptsPercent };
             });
 
-            // 4. 과거 스탯 기준으로 정렬하여 이전 랭킹 생성
             prevStatsArray.sort((a, b) => {
                 if (b.ptsPercent !== a.ptsPercent) return b.ptsPercent - a.ptsPercent;
                 if (b.goals !== a.goals) return b.goals - a.goals;
@@ -593,15 +611,15 @@
             });
 
             // ---------------------------------------------------------
-            // 🏆 종합 스탯 리더보드 (현재 랭킹 정렬 및 변동폭 UI 적용)
+            // 🏆 종합 스탯 리더보드
             // ---------------------------------------------------------
             statsArray.sort((a, b) => {
-                if (b.ptsPercent !== a.ptsPercent) return b.ptsPercent - a.ptsPercent; // 1순위: 승점률
-                if (b.goals !== a.goals) return b.goals - a.goals; // 2순위: 득점
-                if (b.assists !== a.assists) return b.assists - a.assists; // 3순위: 도움
-                if (b.points !== a.points) return b.points - a.points; // 4순위: 공격포인트
-                if (a.apps !== b.apps) return a.apps - b.apps; // 5순위: 출전 수가 적은 사람 우대
-                return b.gd - a.gd; // 6순위: 득실차
+                if (b.ptsPercent !== a.ptsPercent) return b.ptsPercent - a.ptsPercent; 
+                if (b.goals !== a.goals) return b.goals - a.goals; 
+                if (b.assists !== a.assists) return b.assists - a.assists; 
+                if (b.points !== a.points) return b.points - a.points; 
+                if (a.apps !== b.apps) return a.apps - b.apps; 
+                return b.gd - a.gd; 
             });
 
             const tbody = document.getElementById('leaderboardBody');
@@ -616,19 +634,17 @@
                 else if(currentRank === 2) rankClass += ' rank-2';
                 else if(currentRank === 3) rankClass += ' rank-3';
 
-                // ✨ 순위 변동폭 계산 및 아이콘 생성
                 const prevRank = prevRankMap[s.id];
-                let rankChangeHtml = '<span style="font-size:10px; color:#a0aec0; margin-top:2px;">-</span>'; // 변동 없음
+                let rankChangeHtml = '<span style="font-size:10px; color:#a0aec0; margin-top:2px;">-</span>'; 
                 
                 if (prevRank) {
-                    const diff = prevRank - currentRank; // 이전 순위 - 현재 순위
-                    if (diff > 0) { // 순위 상승 (이전 5위 -> 현재 3위 : +2)
+                    const diff = prevRank - currentRank; 
+                    if (diff > 0) { 
                         rankChangeHtml = `<span style="font-size:10px; color:#e53e3e; font-weight:900; margin-top:2px;">▲ ${diff}</span>`;
-                    } else if (diff < 0) { // 순위 하락
+                    } else if (diff < 0) { 
                         rankChangeHtml = `<span style="font-size:10px; color:#3182ce; font-weight:900; margin-top:2px;">▼ ${Math.abs(diff)}</span>`;
                     }
                 } else if (s.apps > 0) {
-                    // 이번 주에 처음 뛴(명단에 진입한) 선수
                     rankChangeHtml = `<span style="font-size:10px; color:#ed8936; font-weight:900; margin-top:2px;">NEW</span>`;
                 }
 
@@ -659,9 +675,9 @@
             });
 
             // ---------------------------------------------------------
-            // 🕵️‍♂️ 시너지 & 천적 상성 분석 (승점률 기반 명확한 표시)
+            // 🕵️‍♂️ 시너지 & 천적 상성 분석
             // ---------------------------------------------------------
-            const duosObj = {};    
+            const duosObj = {};  
             const nemesisObj = {}; 
 
             for (const gameId in gameTeams) {
@@ -669,7 +685,6 @@
                 const teamB = gameTeams[gameId].B || [];
                 const winner = gameTeams[gameId].winner;
 
-                // 1. 듀오 스탯 계산
                 [teamA, teamB].forEach((team, idx) => {
                     const teamWinner = (idx === 0) ? 'A' : 'B';
                     for(let i=0; i<team.length; i++) {
@@ -683,7 +698,6 @@
                     }
                 });
 
-                // 2. 천적 스탯 계산
                 teamA.forEach(a => {
                     teamB.forEach(b => {
                         const pair1 = `${a}|${b}`, pair2 = `${b}|${a}`; 
@@ -700,7 +714,6 @@
 
             const minGames = 2; 
             
-            // 듀오 배열
             let duoArr = [];
             for (const key in duosObj) {
                 if (duosObj[key].games >= minGames) {
@@ -715,32 +728,28 @@
             }
             duoArr.sort((a,b) => b.rate - a.rate);
 
-            // [핵심 개선] 천적 (나의 기존 승점률이 가장 크게 박살나는 상대)
             let nemArr = [];
             for (const key in nemesisObj) {
                 if (nemesisObj[key].games >= minGames) {
-                    const [wId, lId] = key.split('|'); // wId가 lId를 적으로 만났을 때
+                    const [wId, lId] = key.split('|'); 
                     const vsPtsPercent = ((nemesisObj[key].wins * 3 + nemesisObj[key].draws * 1) / (nemesisObj[key].games * 3)) * 100;
                     
                     const wStat = statsArray.find(s => String(s.id) === wId);
                     const basePtsPercent = wStat ? wStat.ptsPercent : 0;
                     
-                    const drop = basePtsPercent - vsPtsPercent; // 하락폭 계산
+                    const drop = basePtsPercent - vsPtsPercent; 
                     
-                    if (drop > 0) { // 승점률이 깎이는 경우만
+                    if (drop > 0) { 
                         nemArr.push({ 
-                            // ✨ 누가 피해자인지 명확하게 분리! (ex. 효린 😭 [vs 혜린])
                             names: `${playersMap[wId]} 😭 <span style="font-size:11px; font-weight:normal; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:6px; vertical-align:middle; margin-left:4px;">vs ${playersMap[lId]}</span>`, 
                             drop: drop, 
-                            // ✨ 보라색 배경에서 더 잘 보이도록 밝은 빨간색(#ff8a8a)으로 변경
                             desc: `<span style="font-size:11px; color:rgba(255,255,255,0.6); text-decoration:line-through; font-weight:normal;">기존 ${Math.round(basePtsPercent)}%</span> <span style="font-size:14px; color:#ff8a8a; font-weight:900; margin-left:2px;">➡️ ${Math.round(vsPtsPercent)}%</span>` 
                         });
                     }
                 }
             }
-            nemArr.sort((a,b) => b.drop - a.drop); // 하락폭이 제일 큰 순서
+            nemArr.sort((a,b) => b.drop - a.drop); 
 
-            // 콤비
             let deliveryArr = [];
             for (const key in assistDuos) {
                 const [aId, sId] = key.split('|');
@@ -748,7 +757,6 @@
             }
             deliveryArr.sort((a,b) => b.goals - a.goals);
 
-            // 국밥수비
             let shieldArr = [];
             for (const key in stats) {
                 if (stats[key].apps >= minGames) {
@@ -758,7 +766,6 @@
             }
             shieldArr.sort((a,b) => a.avg - b.avg);
 
-            // 억울한 에이스
             let sadArr = [];
             if (activePlayers.length > 0) {
                 const teamAvgPts = activePlayers.reduce((sum, s) => sum + parseFloat(s.avgPoints), 0) / activePlayers.length;
