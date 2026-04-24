@@ -8,7 +8,7 @@
     <link rel="manifest" href="site.webmanifest" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FC 풉살 현장 기입 (스마트 필터형)</title>
+    <title>FC 풉살 전술판 기입</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -18,68 +18,54 @@
         .header h1 { margin: 0; font-size: 22px; font-weight: 900; }
         
         .container { max-width: 800px; margin: 15px auto 0 auto; padding: 0 15px; }
-        
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .card-title { font-size: 16px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; }
+        .card-title { font-size: 16px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; display: flex; justify-content: space-between; }
 
         input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; box-sizing: border-box; background: white; font-family: 'Pretendard', sans-serif; }
-        
-        /* A/B팀 바구니 영역 (Active Bucket) */
-        .bucket-container { display: flex; gap: 10px; margin-bottom: 15px; }
-        .team-bucket { flex: 1; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; transition: 0.2s; background: #f8fafc; min-height: 100px; }
-        .team-bucket.a.active { border-color: #3182ce; background: rgba(49, 130, 206, 0.05); box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2); }
-        .team-bucket.b.active { border-color: #e53e3e; background: rgba(229, 62, 62, 0.05); box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2); }
-        .bucket-title { font-weight: 900; text-align: center; margin-bottom: 8px; font-size: 14px; }
-        .bucket-title.a { color: #3182ce; }
-        .bucket-title.b { color: #e53e3e; }
-        .selected-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .selected-chip { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; display: flex; align-items: center; gap: 4px; cursor: pointer; }
-        .selected-chip.a { background: #3182ce; }
-        .selected-chip.b { background: #e53e3e; }
-        .selected-chip.gk { background: #ecc94b; color: #744210; }
-
-        /* 필터링 탭 */
-        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; padding-bottom: 5px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-        .tabs::-webkit-scrollbar { display: none; }
-        .tab-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 20px; border: 1px solid #cbd5e0; background: white; font-weight: 800; font-size: 13px; color: #718096; cursor: pointer; transition: 0.2s; scroll-snap-align: start; }
-        .tab-btn.active { background: #2d3748; color: white; border-color: #2d3748; }
-
-        /* 선수 풀 그리드 */
-        .pool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
-        .pool-player { padding: 10px 5px; background: white; border: 1px solid #cbd5e0; border-radius: 8px; font-weight: 700; font-size: 14px; text-align: center; cursor: pointer; transition: 0.1s; }
-        .pool-player:active { transform: scale(0.95); }
-        .pool-player.disabled { opacity: 0.3; pointer-events: none; background: #e2e8f0; }
-
-        /* 기타 폼 스타일 */
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-weight: bold; color: #4a5568; margin-bottom: 5px; font-size: 13px; }
-        .add-guest { display: flex; gap: 5px; margin-top: 15px; }
+
+        /* ✨ 풋살 전술판 (Pitch) UI */
+        .pitch-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .pitch-wrapper { background: #276749; border: 3px solid #fff; border-radius: 12px; padding: 10px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .pitch-wrapper::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.4); }
+        .pitch-wrapper::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+        .pitch-title { color: white; font-weight: 900; text-align: center; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); position: relative; z-index: 2; }
         
+        .pitch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; position: relative; z-index: 2; }
+        .pos-zone { background: rgba(255,255,255,0.15); border: 2px dashed rgba(255,255,255,0.4); border-radius: 8px; height: 50px; display: flex; justify-content: center; align-items: center; color: rgba(255,255,255,0.7); font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; position: relative; }
+        .pos-zone.active-target { background: rgba(236, 201, 75, 0.4); border-color: #ecc94b; transform: scale(1.05); }
+        .pos-zone.filled { background: white; color: #2d3748; border-style: solid; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 14px; font-weight: 900; }
+        
+        /* 전술판 내 X 버튼 */
+        .remove-btn { position: absolute; top: -6px; right: -6px; background: #e53e3e; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 10px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+        /* 필터링 탭 및 선수 풀 */
+        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 10px; padding-bottom: 5px; scroll-snap-type: x mandatory; }
+        .tab-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 20px; border: 1px solid #cbd5e0; background: white; font-weight: 800; font-size: 13px; color: #718096; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { background: #2d3748; color: white; border-color: #2d3748; }
+
+        .pool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-bottom: 15px; }
+        .pool-player { padding: 10px 5px; background: white; border: 1px solid #cbd5e0; border-radius: 8px; font-weight: 700; font-size: 14px; text-align: center; cursor: pointer; transition: 0.1s; }
+        .pool-player.selected { background: #3182ce; color: white; border-color: #2b6cb0; transform: scale(1.05); box-shadow: 0 4px 6px rgba(49,130,206,0.3); }
+        .pool-player.disabled { opacity: 0.3; pointer-events: none; background: #e2e8f0; }
+        .pool-coach { background: #4a5568; color: white; border-color: #2d3748; }
+
         .score-board { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; }
         .score-input { width: 70px; height: 70px; text-align: center; font-size: 32px; font-weight: 900; border-radius: 12px; border: 2px solid #cbd5e0; }
-        
         .goal-event-row { display: flex; gap: 10px; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; align-items: center; }
         
         .btn-submit { width: 100%; padding: 16px; background: #3182ce; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(49,130,206,0.3); transition: 0.2s; }
         .btn-submit:active { transform: scale(0.98); }
-
-        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
-        .auth-box { background: white; padding: 30px; border-radius: 16px; width: 80%; max-width: 320px; text-align: center; }
+        
+        /* 선택 안내 메시지 바 */
+        .instruction-bar { background: #ebf8ff; color: #2b6cb0; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 15px; border: 1px solid #bee3f8; display: none; }
     </style>
 </head>
 <body>
-<!-- 
-    <div class="auth-overlay" id="authOverlay">
-        <div class="auth-box">
-            <h2 style="margin-top:0;">📝 현장 기입 접속</h2>
-            <p style="font-size:13px; color:#718096; margin-bottom:20px;">입력 권한 코드를 입력해주세요.</p>
-            <input type="text" id="authCodeInput" placeholder="코드 입력 (예: entry2026)" style="margin-bottom:15px; text-align:center;">
-            <button onclick="checkAuth()" class="btn-submit">입장하기</button>
-        </div>
-    </div> -->
 
     <div class="header">
-        <h1 id="pageTitle">FC 풉살 현장 기입 (스마트형)</h1>
+        <h1>FC 풉살 현장 기입 (V2)</h1>
         <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.8;"><a href="index.html" style="color:white; text-decoration:underline;">메인으로 돌아가기</a></p>
     </div>
 
@@ -88,19 +74,16 @@
         <div class="card">
             <div class="card-title">📅 1. 경기 기본 정보</div>
             <div class="input-group">
-                <label>경기 날짜</label>
                 <input type="date" id="matchDate">
             </div>
             <div class="input-group">
-                <label>경기 유형</label>
                 <select id="matchType" onchange="toggleOpponentInput()">
                     <option value="자체경기">자체 훈련 (내부 매치)</option>
                     <option value="교류전">타 팀 교류전 (A팀 vs 상대팀)</option>
                 </select>
             </div>
             <div class="input-group" id="opponentDiv" style="display:none;">
-                <label>상대팀 이름</label>
-                <input type="text" id="opponentName" placeholder="예: FC 개발자들">
+                <input type="text" id="opponentName" placeholder="상대팀 이름 (예: FC 개발자들)">
             </div>
             <div class="input-group">
                 <label>진행 회차 (자동 카운트)</label>
@@ -109,17 +92,22 @@
         </div>
 
         <div class="card">
-            <div class="card-title">🏃 2. 출전 명단 (바구니를 선택하고 선수를 탭하세요!)</div>
-            <p style="font-size:11px; color:#718096; margin-bottom:15px;">* 바구니에 담긴 선수를 한 번 더 누르면 🧤골키퍼로 지정됩니다.</p>
-            
-            <div class="bucket-container">
-                <div class="team-bucket a active" id="bucketA" onclick="setActiveBucket('A')">
-                    <div class="bucket-title a">A팀 명단 <span id="countA">(0)</span></div>
-                    <div class="selected-list" id="selectedListA"></div>
+            <div class="card-title">
+                <span>🏃 2. 전술판 (터치 & 플레이스)</span>
+            </div>
+            <p style="font-size:11px; color:#718096; margin-top:-10px; margin-bottom:15px;">* 선수를 누르고, 초록색 코트 위 원하는 빈자리를 누르세요.</p>
+
+            <div class="instruction-bar" id="instructionBar">👇 아래 전술판에서 배치할 위치를 선택하세요!</div>
+
+            <div class="pitch-container">
+                <div class="pitch-wrapper" id="pitchA">
+                    <div class="pitch-title">A팀 전술판</div>
+                    <div class="pitch-grid" id="gridA"></div>
                 </div>
-                <div class="team-bucket b" id="bucketB" onclick="setActiveBucket('B')">
-                    <div class="bucket-title b">B팀 명단 <span id="countB">(0)</span></div>
-                    <div class="selected-list" id="selectedListB"></div>
+
+                <div class="pitch-wrapper" id="pitchB">
+                    <div class="pitch-title" style="color:#fbd38d;">B팀 전술판</div>
+                    <div class="pitch-grid" id="gridB"></div>
                 </div>
             </div>
 
@@ -130,17 +118,17 @@
                 <button class="tab-btn" onclick="setTab('기타')">기타/미참가</button>
             </div>
 
-            <div class="pool-grid" id="playerPoolGrid">
-                </div>
+            <div class="pool-grid" id="playerPoolGrid"></div>
 
-            <div class="add-guest">
-                <input type="text" id="guestName" placeholder="임시 용병 이름 입력" style="flex:1; min-width:0;">
-                <button onclick="addGuest()" style="padding:10px 15px; background:#4a5568; color:white; border:none; border-radius:8px; font-weight:bold; white-space:nowrap;">+ 용병 추가</button>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="guestName" placeholder="용병 이름 입력" style="flex:1;">
+                <button onclick="addGuest()" style="padding:10px; background:#e2e8f0; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">+ 용병</button>
+                <button onclick="addCoach()" class="pool-player pool-coach" style="margin:0;">🧢 코치 투입</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">⚽ 3. 경기 결과 및 스코어</div>
+            <div class="card-title">⚽ 3. 스코어 및 득점 기록</div>
             <div class="score-board">
                 <div style="text-align:center;">
                     <div style="font-weight:900; color:#3182ce; margin-bottom:5px;">A팀</div>
@@ -152,26 +140,21 @@
                     <input type="number" id="scoreB" class="score-input" value="0" min="0" onchange="generateGoalEvents()">
                 </div>
             </div>
+            
+            <div id="goalEventsContainer" style="margin-top:15px;"></div>
         </div>
 
-        <div class="card" id="goalEventsCard" style="display:none;">
-            <div class="card-title">🎯 4. 득점 상세 정보</div>
-            <p style="font-size:11px; color:#e53e3e; margin-bottom:10px;">* 자책골은 해당 스코어를 올린 팀의 득점자 목록 맨 아래에 있습니다.</p>
-            <div id="goalEventsContainer"></div>
-        </div>
-
-        <button onclick="submitGameData()" class="btn-submit" id="submitBtn">경기 기록 저장하기 (DB 전송)</button>
+        <button onclick="submitGameData()" class="btn-submit" id="submitBtn">경기 기록 저장하기</button>
     </div>
 
     <script>
         // ==========================================
-        // Supabase 연동 (본인 키로 변경!)
+        // Supabase 연동 (본인 키로 변경 필수!)
         // ==========================================
         const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 1. 팀별 데이터 구조화
         const teamData = {
             '민호&준하': ['가은', '나영', '서윤(j)', '시현', '영은', '재인', '주원', '혜린', '혜선'],
             '원배&경표': ['송희', '수연', '승민', '은영', '인선', '지혜', '해수', '혜진', '화인'],
@@ -179,65 +162,82 @@
             '기타': ['서윤(k)', '연주']
         };
 
-        // 상태 관리 변수
-        let activeBucket = 'A'; // 'A' or 'B'
-        let currentTab = 'Team 1';
-        let selectedA = []; // 배열 요소: { name: '이름', isGk: false, isGuest: false }
-        let selectedB = [];
+        // 포지션 레이아웃 매핑 (그리드 순서대로)
+        const pitchZones = [
+            { id: 'Pivo_L', label: '왼쪽 피보', code: 'Pivo_L' },
+            { id: 'Pivo', label: '중앙 피보', code: 'Pivo' },
+            { id: 'Pivo_R', label: '오른쪽 피보', code: 'Pivo_R' },
+            { id: 'Ala_L', label: '왼쪽 아라', code: 'Ala_L' },
+            { id: 'C_Ala', label: '중앙 아라', code: 'C_Ala' },
+            { id: 'Ala_R', label: '오른쪽 아라', code: 'Ala_R' },
+            { id: 'Fixo_L', label: '왼쪽 픽소', code: 'Fixo_L' },
+            { id: 'Fixo', label: '중앙 픽소', code: 'Fixo' },
+            { id: 'Fixo_R', label: '오른쪽 픽소', code: 'Fixo_R' },
+            { id: 'Blank1', label: '', code: '' }, // 빈 공간
+            { id: 'GK', label: '골키퍼', code: 'GK' },
+            { id: 'Blank2', label: '', code: '' }  // 빈 공간
+        ];
+
+        // 전술판 상태 저장소
+        let pitchState = {
+            'A': {}, // { 'Pivo': { name: '가은', isGuest: false }, ... }
+            'B': {}
+        };
+        
+        let currentTab = '민호&준하';
+        let pendingPlayer = null; // 현재 선택된 선수 (터치 앤 플레이스 대기 상태)
+        let coachCounter = 1;
 
         window.onload = () => {
             document.getElementById('matchDate').valueAsDate = new Date();
+            initPitch('A', 'gridA');
+            initPitch('B', 'gridB');
             renderTabs();
             renderPlayerPool();
-            renderBuckets();
         };
-
-        // 권한 체크
-        function checkAuth() {
-            const code = document.getElementById('authCodeInput').value.trim();
-            if (code === 'entry2026') {
-                document.getElementById('authOverlay').style.display = 'none';
-            } else {
-                alert('유효하지 않은 코드입니다.');
-            }
-        }
 
         // 교류전 UI 변경
         function toggleOpponentInput() {
             const type = document.getElementById('matchType').value;
             const oppDiv = document.getElementById('opponentDiv');
             const labelB = document.getElementById('labelTeamB');
-            const bucketB = document.getElementById('bucketB');
+            const pitchB = document.getElementById('pitchB');
             
             if (type === '교류전') {
                 oppDiv.style.display = 'block';
                 labelB.innerText = '상대팀';
-                bucketB.style.display = 'none'; // 상대팀 명단은 숨김
-                selectedB = []; // 명단 비우기
+                pitchB.style.display = 'none'; 
+                pitchState['B'] = {}; // B팀 전술판 초기화
             } else {
                 oppDiv.style.display = 'none';
                 labelB.innerText = 'B팀';
-                bucketB.style.display = 'block';
+                pitchB.style.display = 'block';
             }
-            renderBuckets();
+            initPitch('B', 'gridB'); // 다시 그리기
             renderPlayerPool();
             generateGoalEvents();
         }
 
-        // 바구니 활성화
-        function setActiveBucket(team) {
-            activeBucket = team;
-            document.getElementById('bucketA').classList.toggle('active', team === 'A');
-            document.getElementById('bucketB').classList.toggle('active', team === 'B');
+        // 전술판(그리드) 초기 렌더링
+        function initPitch(team, gridId) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            pitchZones.forEach(zone => {
+                const div = document.createElement('div');
+                if (zone.code === '') {
+                    div.style.visibility = 'hidden'; // 빈 공간 처리
+                } else {
+                    div.className = 'pos-zone';
+                    div.id = `zone_${team}_${zone.code}`;
+                    div.innerText = zone.label;
+                    div.onclick = () => placePlayerOnZone(team, zone.code);
+                }
+                grid.appendChild(div);
+            });
+            updatePitchUI(team);
         }
 
-        // 탭 변경
-        function setTab(tabName) {
-            currentTab = tabName;
-            renderTabs();
-            renderPlayerPool();
-        }
-
+        // 탭 렌더링
         function renderTabs() {
             const tabsDiv = document.getElementById('teamTabs');
             tabsDiv.innerHTML = '';
@@ -245,7 +245,7 @@
                 const btn = document.createElement('button');
                 btn.className = `tab-btn ${currentTab === team ? 'active' : ''}`;
                 btn.innerText = team === '기타' ? '기타/용병' : team;
-                btn.onclick = () => setTab(team);
+                btn.onclick = () => { currentTab = team; renderTabs(); renderPlayerPool(); };
                 tabsDiv.appendChild(btn);
             });
         }
@@ -257,115 +257,125 @@
             const players = teamData[currentTab] || [];
             
             players.forEach(name => {
-                const isSelectedA = selectedA.some(p => p.name === name);
-                const isSelectedB = selectedB.some(p => p.name === name);
-                const isDisabled = isSelectedA || isSelectedB;
+                // 이미 A나 B 전술판에 들어가 있는지 확인
+                const isPlaced = Object.values(pitchState['A']).some(p => p.name === name) || 
+                                 Object.values(pitchState['B']).some(p => p.name === name);
 
                 const btn = document.createElement('div');
-                btn.className = `pool-player ${isDisabled ? 'disabled' : ''}`;
+                btn.className = `pool-player ${isPlaced ? 'disabled' : ''}`;
+                if (pendingPlayer && pendingPlayer.name === name) {
+                    btn.classList.add('selected'); // 선택 대기 상태
+                }
                 btn.innerText = name;
                 
-                if (!isDisabled) {
-                    btn.onclick = () => addPlayerToActiveBucket(name, false);
+                if (!isPlaced) {
+                    btn.onclick = () => selectPlayerForPlacement(name, false);
                 }
                 grid.appendChild(btn);
             });
         }
 
-        // 활성화된 바구니에 선수 넣기
-        function addPlayerToActiveBucket(name, isGuest) {
-            const targetArray = activeBucket === 'A' ? selectedA : selectedB;
-            targetArray.push({ name: name, isGk: false, isGuest: isGuest });
-            
-            // 용병이면 기타 탭 데이터에도 일시적으로 추가해줌
-            if(isGuest && !teamData['기타'].includes(name)) {
-                teamData['기타'].push(name);
+        // [스마트 터치 1단계] 선수 누르기
+        function selectPlayerForPlacement(name, isGuest) {
+            if (pendingPlayer && pendingPlayer.name === name) {
+                // 한 번 더 누르면 선택 취소
+                pendingPlayer = null;
+                document.getElementById('instructionBar').style.display = 'none';
+                document.querySelectorAll('.pos-zone:not(.filled)').forEach(el => el.classList.remove('active-target'));
+            } else {
+                pendingPlayer = { name, isGuest };
+                document.getElementById('instructionBar').style.display = 'block';
+                // 빈자리에 시각적 힌트 주기
+                document.querySelectorAll('.pos-zone:not(.filled)').forEach(el => el.classList.add('active-target'));
             }
-
-            renderBuckets();
             renderPlayerPool();
-            generateGoalEvents(); // 드롭다운 업데이트
         }
 
-        // 바구니에서 선수 제거 또는 GK 토글
-        function handleBucketClick(team, index) {
-            const targetArray = team === 'A' ? selectedA : selectedB;
-            const player = targetArray[index];
+        // [스마트 터치 2단계] 전술판 빈자리 누르기
+        function placePlayerOnZone(team, zoneCode) {
+            if (!pendingPlayer) return; // 선택된 선수가 없으면 무시
 
-            if (!player.isGk) {
-                // GK가 아니면 GK로 변경할지 묻기
-                if(confirm(`${player.name} 선수를 골키퍼(GK)로 지정하시겠습니까?\n(취소를 누르면 명단에서 제외됩니다.)`)) {
-                    player.isGk = true;
-                } else {
-                    targetArray.splice(index, 1); // 명단에서 제거
-                }
-            } else {
-                // 이미 GK면 누를 시 명단에서 제외
-                if(confirm(`${player.name} 선수를 명단에서 제외하시겠습니까?`)) {
-                    targetArray.splice(index, 1);
-                } else {
-                    player.isGk = false; // 취소하면 일반 필드 플레이어로 복구
-                }
+            // 이미 그 자리에 누가 있으면 덮어쓰기 (기존 선수는 풀로 돌아감)
+            if (pitchState[team][zoneCode]) {
+                if(!confirm("이미 배치된 선수가 있습니다. 교체하시겠습니까?")) return;
             }
-            renderBuckets();
+
+            // 전술판 상태 업데이트
+            pitchState[team][zoneCode] = { ...pendingPlayer };
+            
+            // 임시 데이터면 '기타'에 등록해줌 (용병이나 코치)
+            if(pendingPlayer.isGuest && !teamData['기타'].includes(pendingPlayer.name)) {
+                teamData['기타'].push(pendingPlayer.name);
+            }
+
+            // 초기화
+            pendingPlayer = null;
+            document.getElementById('instructionBar').style.display = 'none';
+            document.querySelectorAll('.pos-zone').forEach(el => el.classList.remove('active-target'));
+
+            updatePitchUI(team);
+            renderPlayerPool();
+            generateGoalEvents(); // 득점자 목록 갱신
+        }
+
+        // 전술판에서 선수 빼기
+        function removePlayerFromZone(team, zoneCode) {
+            delete pitchState[team][zoneCode];
+            updatePitchUI(team);
             renderPlayerPool();
             generateGoalEvents();
         }
 
-        // 바구니 렌더링
-        function renderBuckets() {
-            const listA = document.getElementById('selectedListA');
-            const listB = document.getElementById('selectedListB');
-            
-            listA.innerHTML = '';
-            selectedA.forEach((p, idx) => {
-                const chip = document.createElement('div');
-                chip.className = `selected-chip a ${p.isGk ? 'gk' : ''}`;
-                chip.innerHTML = `${p.name} ${p.isGk ? '🧤' : '✖'}`;
-                chip.onclick = (e) => { e.stopPropagation(); handleBucketClick('A', idx); };
-                listA.appendChild(chip);
+        // 전술판 UI 동기화
+        function updatePitchUI(team) {
+            pitchZones.forEach(zone => {
+                if(zone.code === '') return;
+                const zoneDiv = document.getElementById(`zone_${team}_${zone.code}`);
+                const player = pitchState[team][zone.code];
+                
+                if (player) {
+                    zoneDiv.className = 'pos-zone filled';
+                    zoneDiv.innerHTML = `
+                        ${player.name}
+                        <div class="remove-btn" onclick="event.stopPropagation(); removePlayerFromZone('${team}', '${zone.code}')">X</div>
+                    `;
+                } else {
+                    zoneDiv.className = 'pos-zone';
+                    if(pendingPlayer) zoneDiv.classList.add('active-target');
+                    zoneDiv.innerHTML = zone.label;
+                }
             });
-            document.getElementById('countA').innerText = `(${selectedA.length})`;
-
-            listB.innerHTML = '';
-            selectedB.forEach((p, idx) => {
-                const chip = document.createElement('div');
-                chip.className = `selected-chip b ${p.isGk ? 'gk' : ''}`;
-                chip.innerHTML = `${p.name} ${p.isGk ? '🧤' : '✖'}`;
-                chip.onclick = (e) => { e.stopPropagation(); handleBucketClick('B', idx); };
-                listB.appendChild(chip);
-            });
-            document.getElementById('countB').innerText = `(${selectedB.length})`;
         }
 
         function addGuest() {
             const nameInput = document.getElementById('guestName');
             const name = nameInput.value.trim();
-            if (!name) return alert('이름을 입력하세요.');
-            
-            const isAlreadyA = selectedA.some(p => p.name === name);
-            const isAlreadyB = selectedB.some(p => p.name === name);
-            
-            if(isAlreadyA || isAlreadyB) return alert('이미 추가된 이름입니다.');
-
-            addPlayerToActiveBucket(`${name}(용병)`, true);
+            if (!name) return alert('용병 이름을 입력하세요.');
+            selectPlayerForPlacement(`${name}(용병)`, true);
             nameInput.value = '';
         }
 
-        // 득점 이벤트 동적 생성 (기존 로직 유지, UI 스타일만 변경)
+        function addCoach() {
+            const name = `코치${coachCounter++}`;
+            selectPlayerForPlacement(name, true);
+        }
+
+        // 현재 배치된 전체 선수 리스트 가져오기 (득점 기록용)
+        function getPlacedPlayers(team) {
+            return Object.values(pitchState[team]).filter(p => p !== null);
+        }
+
         function generateGoalEvents() {
             const scoreA = parseInt(document.getElementById('scoreA').value) || 0;
             const scoreB = parseInt(document.getElementById('scoreB').value) || 0;
             const container = document.getElementById('goalEventsContainer');
-            const card = document.getElementById('goalEventsCard');
             const matchType = document.getElementById('matchType').value;
             
+            const playersA = getPlacedPlayers('A');
+            const playersB = getPlacedPlayers('B');
+
             container.innerHTML = '';
-            if (scoreA === 0 && scoreB === 0) {
-                card.style.display = 'none';
-                return;
-            }
-            card.style.display = 'block';
+            if (scoreA === 0 && scoreB === 0) return;
 
             const createSelect = (options, isOwnGoalOption = false) => {
                 let html = '<option value="">선택 안함</option>';
@@ -381,11 +391,11 @@
                         <div style="flex:1;">
                             <select class="goal-scorer-a" style="margin-bottom:5px;">
                                 <option value="" disabled selected>⚽ 득점자 선택</option>
-                                ${createSelect(selectedA, true)}
+                                ${createSelect(playersA, true)}
                             </select>
                             <select class="goal-assist-a">
                                 <option value="" disabled selected>👟 어시스트 선택</option>
-                                ${createSelect(selectedA)}
+                                ${createSelect(playersA)}
                             </select>
                         </div>
                     </div>
@@ -400,28 +410,29 @@
                             <div style="flex:1;">
                                 <select class="goal-scorer-b" style="margin-bottom:5px;">
                                     <option value="" disabled selected>⚽ 득점자 선택</option>
-                                    ${createSelect(selectedB, true)}
+                                    ${createSelect(playersB, true)}
                                 </select>
                                 <select class="goal-assist-b">
                                     <option value="" disabled selected>👟 어시스트 선택</option>
-                                    ${createSelect(selectedB)}
+                                    ${createSelect(playersB)}
                                 </select>
                             </div>
                         </div>
                     `;
                 }
-            } else {
-                if (scoreB > 0) {
-                    container.innerHTML += `<div style="color:#718096; font-size:13px; text-align:center; padding:10px;">교류전: B팀(상대팀) ${scoreB}실점 기록 완료</div>`;
-                }
+            } else if(scoreB > 0) {
+                container.innerHTML += `<div style="color:#718096; font-size:13px; text-align:center; padding:10px;">교류전: B팀(상대팀) ${scoreB}실점 기록 완료</div>`;
             }
         }
 
         // ==========================================
-        // 데이터베이스 전송 로직
+        // 데이터베이스 전송 로직 (포지션 포함)
         // ==========================================
         async function submitGameData() {
-            if(selectedA.length === 0) return alert('A팀 명단을 선택해주세요.');
+            const playersA = Object.entries(pitchState['A']);
+            const playersB = Object.entries(pitchState['B']);
+            
+            if(playersA.length === 0) return alert('A팀 전술판에 최소 1명 이상 배치해주세요.');
             
             const btn = document.getElementById('submitBtn');
             btn.innerText = '데이터 저장 중...';
@@ -453,38 +464,33 @@
                 // 2. 게임 기록 생성
                 const { data: game, error: gameError } = await supabaseClient
                     .from('games')
-                    .insert([{
-                        match_day_id: matchDay.id,
-                        game_number: gameNum,
-                        team_a_score: scoreA,
-                        team_b_score: scoreB
-                    }]).select().single();
+                    .insert([{ match_day_id: matchDay.id, game_number: gameNum, team_a_score: scoreA, team_b_score: scoreB }])
+                    .select().single();
                 if (gameError) throw gameError;
 
                 // 3. 선수 ID 매핑 및 신규 생성
-                const allSelected = [...selectedA, ...selectedB];
+                const allPlaced = [...playersA.map(p => p[1]), ...playersB.map(p => p[1])];
                 const playerIds = {};
 
-                for (const p of allSelected) {
-                    let { data: existingPlayer } = await supabaseClient
-                        .from('players')
-                        .select('id').eq('name', p.name).single();
-
+                for (const p of allPlaced) {
+                    let { data: existingPlayer } = await supabaseClient.from('players').select('id').eq('name', p.name).single();
                     if (!existingPlayer) {
                         const { data: newP, error: newPError } = await supabaseClient
-                            .from('players')
-                            .insert([{ name: p.name, is_guest: p.isGuest }])
-                            .select().single();
+                            .from('players').insert([{ name: p.name, is_guest: p.isGuest }]).select().single();
                         if (newPError) throw newPError;
                         existingPlayer = newP;
                     }
                     playerIds[p.name] = existingPlayer.id;
                 }
 
-                // 4. 라인업 기록
+                // 4. 라인업 기록 (✨ 포지션 데이터 포함)
                 const lineupInserts = [];
-                selectedA.forEach(p => lineupInserts.push({ game_id: game.id, player_id: playerIds[p.name], team: 'A', is_gk: p.isGk }));
-                selectedB.forEach(p => lineupInserts.push({ game_id: game.id, player_id: playerIds[p.name], team: 'B', is_gk: p.isGk }));
+                playersA.forEach(([zoneCode, p]) => {
+                    lineupInserts.push({ game_id: game.id, player_id: playerIds[p.name], team: 'A', position: zoneCode, is_gk: (zoneCode === 'GK') });
+                });
+                playersB.forEach(([zoneCode, p]) => {
+                    lineupInserts.push({ game_id: game.id, player_id: playerIds[p.name], team: 'B', position: zoneCode, is_gk: (zoneCode === 'GK') });
+                });
                 
                 if (lineupInserts.length > 0) {
                     const { error: luError } = await supabaseClient.from('game_lineups').insert(lineupInserts);
@@ -498,11 +504,8 @@
                 scorersA.forEach((select, idx) => {
                     const sVal = select.value;
                     const aVal = assistsA[idx].value;
-                    if (sVal === 'OWN_GOAL') {
-                        goalInserts.push({ game_id: game.id, scoring_team: 'A', is_own_goal: true });
-                    } else if (sVal) {
-                        goalInserts.push({ game_id: game.id, scoring_team: 'A', scorer_id: playerIds[sVal], assist_id: aVal ? playerIds[aVal] : null });
-                    }
+                    if (sVal === 'OWN_GOAL') goalInserts.push({ game_id: game.id, scoring_team: 'A', is_own_goal: true });
+                    else if (sVal) goalInserts.push({ game_id: game.id, scoring_team: 'A', scorer_id: playerIds[sVal], assist_id: aVal ? playerIds[aVal] : null });
                 });
 
                 if (type === '자체경기') {
@@ -511,11 +514,8 @@
                     scorersB.forEach((select, idx) => {
                         const sVal = select.value;
                         const aVal = assistsB[idx].value;
-                        if (sVal === 'OWN_GOAL') {
-                            goalInserts.push({ game_id: game.id, scoring_team: 'B', is_own_goal: true });
-                        } else if (sVal) {
-                            goalInserts.push({ game_id: game.id, scoring_team: 'B', scorer_id: playerIds[sVal], assist_id: aVal ? playerIds[aVal] : null });
-                        }
+                        if (sVal === 'OWN_GOAL') goalInserts.push({ game_id: game.id, scoring_team: 'B', is_own_goal: true });
+                        else if (sVal) goalInserts.push({ game_id: game.id, scoring_team: 'B', scorer_id: playerIds[sVal], assist_id: aVal ? playerIds[aVal] : null });
                     });
                 }
 
@@ -524,7 +524,6 @@
                     if (goalError) throw goalError;
                 }
 
-                // 성공 초기화
                 alert(`✅ ${gameNum}경기 저장이 완료되었습니다!\n(다음 경기를 위해 스코어가 초기화됩니다.)`);
                 document.getElementById('scoreA').value = 0;
                 document.getElementById('scoreB').value = 0;
@@ -535,7 +534,7 @@
                 console.error(err);
                 alert("❌ 저장 중 오류가 발생했습니다: " + err.message);
             } finally {
-                btn.innerText = '경기 기록 저장하기 (DB 전송)';
+                btn.innerText = '경기 기록 저장하기';
                 btn.style.background = '#3182ce';
                 btn.disabled = false;
             }
