@@ -550,7 +550,7 @@
                         const alpha = Math.min(0.9, 0.3 + ratio * 0.7);
                         bgStr = `rgba(229, 62, 62, ${alpha})`;
                         const losses = stat.apps - stat.wins - stat.draws;
-                        const winRate = Math.round(((stat.wins * 3 + stat.draws * 1) / (stat.apps * 3)) * 100);
+                        const winRate = Math.round(((stat.wins * 3 + stat.draws * 1.5) / (stat.apps * 3)) * 100);
                         textStr += `
                             <span style="font-size:15px; color:white; font-weight:900; line-height:1.1;">${stat.apps}전</span>
                             <span style="font-size:11px; color:#fbd38d; font-weight:bold; margin-top:2px;">${stat.wins}승 ${stat.draws}무 ${losses}패</span>
