@@ -282,17 +282,7 @@
                     let teamAName = isFriendly ? '풉살팀' : 'A팀';
                     let teamBName = isFriendly ? (game.match_days.opponent || '상대팀') : 'B팀';
 
-                    const lineupA_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'A');
-                    const lineupB_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'B');
-
-                    if (!isFriendly) {
-                        const majorityA = getMajorityTeamName(lineupA_raw);
-                        const majorityB = getMajorityTeamName(lineupB_raw);
-                        if (majorityA) teamAName = majorityA;
-                        if (majorityB) teamBName = majorityB;
-                    }
-
-// 출전 명단 필터링
+                    // 출전 명단 필터링 (✨ 중복 선언된 부분을 하나로 합쳤습니다!)
                     const lineupA_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'A');
                     const lineupB_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'B');
 
