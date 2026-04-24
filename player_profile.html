@@ -246,7 +246,7 @@
             const maxStar = Math.max(...activePlayers.map(s => s.starFactor));
 
             // 순위 뱃지 계산
-            activePlayers.forEach(p => { p.points = p.goals + p.assists; p.ptsPercent = p.apps > 0 ? Math.round(((p.wins * 3 + p.draws * 1) / (p.apps * 3)) * 100) : 0; });
+            activePlayers.forEach(p => { p.points = p.goals + p.assists; p.ptsPercent = p.apps > 0 ? Math.round(((p.wins * 3 + p.draws * 1.5) / (p.apps * 3)) * 100) : 0; });
             function getPlayerRank(playerId, array, key, minApps = 1) {
                 const validPlayers = array.filter(p => p.apps >= minApps && p[key] > 0).sort((a, b) => b[key] - a[key]);
                 if (validPlayers.length === 0) return null;
