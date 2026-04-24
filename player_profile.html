@@ -308,25 +308,25 @@
             }
 
 
-            // 🔥 [신규 2] 플레이 스타일 자동 태깅 (MBTI 방식)
-            let playStyleTag = "🌱 무한한 잠재력을 가진 유망주";
-            const isFixo = mainPos.includes('Fixo');
-            const isAla = mainPos.includes('Ala');
-            const isPivo = mainPos.includes('Pivo');
+            // 🔥 [신규 2] 플레이 스타일 자동 태깅 (MBTI 방식)(수정예정)
+            // let playStyleTag = "🌱 무한한 잠재력을 가진 유망주";
+            // const isFixo = mainPos.includes('Fixo');
+            // const isAla = mainPos.includes('Ala');
+            // const isPivo = mainPos.includes('Pivo');
 
-            if (myStat.goals >= myStat.assists * 2 && myStat.goals >= 3) {
-                playStyleTag = "🔥 이기적인 득점 기계 (포처)";
-            } else if (myStat.assists >= myStat.goals * 1.5 && myStat.assists >= 3) {
-                playStyleTag = "🎯 정밀 타격 택배 기사";
-            } else if (myStat.apps >= 5 && points < 2 && scoreDefense >= 70 && isFixo) {
-                playStyleTag = "🛡️ 보이지 않는 헌신, 국밥 수비수";
-            } else if (ptsPercent >= 60 && myStat.apps >= 5) {
-                playStyleTag = "🍀 그라운드를 지배하는 승리 토템";
-            } else if (myStat.mom >= 2) {
-                playStyleTag = "⭐ 위기를 기회로, 슈퍼 크랙";
-            } else if (isAla && scorePass >= 70) {
-                playStyleTag = "⚡ 쉴 새 없이 뛰는 측면의 지배자";
-            }
+            // if (myStat.goals >= myStat.assists * 2 && myStat.goals >= 3) {
+            //     playStyleTag = "🔥 이기적인 득점 기계 (포처)";
+            // } else if (myStat.assists >= myStat.goals * 1.5 && myStat.assists >= 3) {
+            //     playStyleTag = "🎯 정밀 타격 택배 기사";
+            // } else if (myStat.apps >= 5 && points < 2 && scoreDefense >= 70 && isFixo) {
+            //     playStyleTag = "🛡️ 보이지 않는 헌신, 국밥 수비수";
+            // } else if (ptsPercent >= 60 && myStat.apps >= 5) {
+            //     playStyleTag = "🍀 그라운드를 지배하는 승리 토템";
+            // } else if (myStat.mom >= 2) {
+            //     playStyleTag = "⭐ 위기를 기회로, 슈퍼 크랙";
+            // } else if (isAla && scorePass >= 70) {
+            //     playStyleTag = "⚡ 쉴 새 없이 뛰는 측면의 지배자";
+            // }
 
 
             // 🔥 [신규 3] 마일스톤 & 트로피 진열장 (업적 시스템) 연산
