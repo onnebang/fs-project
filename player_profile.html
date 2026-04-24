@@ -23,9 +23,6 @@
         .profile-img-placeholder { width: 90px; height: 90px; background: white; border-radius: 50%; margin: 0 auto 15px auto; display: flex; justify-content: center; align-items: center; font-size: 36px; font-weight: 900; color: #2b6cb0; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 4px solid rgba(255,255,255,0.3); }
         .player-name { font-size: 32px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; }
         
-        /* ✨ 신규: 플레이 스타일 태그 */
-        .play-style-tag { font-size: 15px; font-weight: 900; color: #ecc94b; background: rgba(0,0,0,0.3); padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(236,201,75,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.2); letter-spacing: -0.5px; }
-
         .player-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; max-width: 350px; margin-left: auto; margin-right: auto; }
         .badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .badge.gold { border-color: #ecc94b; color: #ecc94b; background: rgba(236,201,75,0.15); }
@@ -42,13 +39,28 @@
 
         .chart-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; aspect-ratio: 1 / 1; }
 
-        /* ✨ 신규: 트로피 진열장 UI */
-        .trophy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .trophy-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px 5px; text-align: center; transition: 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
-        .trophy-item.locked { filter: grayscale(100%); opacity: 0.4; background: #edf2f7; }
-        .trophy-icon { font-size: 28px; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .trophy-name { font-size: 11px; font-weight: 900; color: #2d3748; }
-        .trophy-desc { font-size: 9px; color: #718096; margin-top: 3px; font-weight: bold; letter-spacing: -0.5px; }
+        /* ✨ 신규: 티어형 마일스톤 UI */
+        .trophy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .trophy-item { background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 15px 10px; text-align: center; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        
+        .tier-badge { position: absolute; top: -1px; left: -1px; font-size: 10px; font-weight: 900; padding: 4px 8px; border-bottom-right-radius: 8px; color: white; letter-spacing: -0.5px; z-index: 2; border-top-left-radius: 10px; }
+        .tier-None { display: none; }
+        .tier-Bronze { background: #cd7f32; }
+        .tier-Silver { background: #a0aec0; }
+        .tier-Gold { background: #ecc94b; color: #744210; }
+        .tier-Platinum { background: #38b2ac; }
+        .tier-Diamond { background: #63b3ed; }
+        .tier-GOD { background: linear-gradient(135deg, #ed8936, #ed64a6, #9f7aea); animation: godGlow 3s infinite alternate; }
+        @keyframes godGlow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(45deg); } }
+
+        .trophy-locked { filter: grayscale(100%); opacity: 0.6; background: #f8fafc; }
+        .trophy-icon { font-size: 32px; margin-bottom: 5px; margin-top: 10px; }
+        .trophy-name { font-size: 13px; font-weight: 900; color: #2d3748; }
+        .trophy-desc { font-size: 10px; color: #718096; margin-top: 3px; font-weight: bold; }
+        
+        .progress-bar-bg { background: #edf2f7; height: 6px; border-radius: 3px; margin: 8px 10px 0 10px; overflow: hidden; }
+        .progress-bar-fill { background: #3182ce; height: 100%; transition: width 0.5s ease-out; }
+        .progress-text { font-size: 9px; color: #a0aec0; font-weight: bold; margin-top: 4px; display: block; }
 
         .relation-item { display: flex; flex-direction: column; align-items: flex-start; padding: 15px; border-radius: 12px; background: #f8fafc; margin-bottom: 15px; border: 1px solid #edf2f7; }
         .relation-header { display: flex; align-items: center; width: 100%; margin-bottom: 12px; }
@@ -82,8 +94,8 @@
     </div>
 
     <script>
-        const supabaseUrl = 'https://qjvuxwldlviknhiydoxw.supabase.co'; 
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdnV4d2xkbHZpa25oaXlkb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDA0MDcsImV4cCI6MjA5MTI3NjQwN30.bOD8ciTRnSESfyzN9DJz3Ttz4u-V8ZEqehwSRdH1NtU';
+        const supabaseUrl = 'https://여기에_URL.supabase.co'; 
+        const supabaseKey = '여기에_KEY';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = () => {
@@ -128,6 +140,11 @@
 
             const gameTeams = {}; 
             const myGames = []; 
+            
+            // ✨ 신규: 상세 업적 계산용 Set 컬렉션
+            const myTeammates = new Set();
+            const myPositions = new Set();
+            let cleanSheets = 0;
 
             lineupsRes.data.forEach(l => {
                 const pStat = stats[l.player_id];
@@ -160,11 +177,26 @@
                             myAssists: 0,
                             position: l.position
                         });
+
+                        // 포지션 & 무실점 수집
+                        if (l.position && !l.position.startsWith('Blank')) myPositions.add(l.position);
+                        const conceded = l.team === 'A' ? game.team_b_score : game.team_a_score;
+                        if (conceded === 0 && game.match_days.match_type !== '교류전') cleanSheets++;
                     }
                 }
             });
 
+            // 동료 수집 (루프를 한 번 더 돌아서 내가 속한 팀원들 긁어오기)
+            for (const gameId in gameTeams) {
+                const teamA = gameTeams[gameId].A;
+                const teamB = gameTeams[gameId].B;
+                if (teamA && teamA.includes(targetId)) teamA.forEach(id => { if (id !== targetId) myTeammates.add(id); });
+                if (teamB && teamB.includes(targetId)) teamB.forEach(id => { if (id !== targetId) myTeammates.add(id); });
+            }
+
             myGames.sort((a, b) => new Date(b.gameInfo.created_at) - new Date(a.gameInfo.created_at));
+
+            const myAssistTargets = new Set();
 
             goalsRes.data.forEach(g => {
                 if (!g.is_own_goal && g.scorer_id && stats[g.scorer_id]) stats[g.scorer_id].goals += 1;
@@ -174,7 +206,10 @@
                     const myGame = myGames.find(mg => mg.gameInfo.id === g.game_id);
                     if (myGame) {
                         if (!g.is_own_goal && g.scorer_id === targetId) myGame.myGoals += 1;
-                        if (g.assist_id === targetId) myGame.myAssists += 1;
+                        if (g.assist_id === targetId) {
+                            myGame.myAssists += 1;
+                            if (g.scorer_id && !g.is_own_goal) myAssistTargets.add(g.scorer_id); // 택배망 수집
+                        }
                     }
                 }
             });
@@ -210,7 +245,7 @@
             const maxPass = Math.max(...activePlayers.map(s => s.passFactor));
             const maxStar = Math.max(...activePlayers.map(s => s.starFactor));
 
-            // 순위 계산 함수
+            // 순위 뱃지 계산
             activePlayers.forEach(p => { p.points = p.goals + p.assists; p.ptsPercent = p.apps > 0 ? Math.round(((p.wins * 3 + p.draws * 1) / (p.apps * 3)) * 100) : 0; });
             function getPlayerRank(playerId, array, key, minApps = 1) {
                 const validPlayers = array.filter(p => p.apps >= minApps && p[key] > 0).sort((a, b) => b[key] - a[key]);
@@ -257,7 +292,7 @@
             const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
 
-            // 🔥 [기존] 뱃지 시스템 조립 (Top 5 등)
+            // 🔥 [기존] 상단 랭킹 뱃지 조립
             let badgesHtml = '';
             if (rankGoals) {
                 if (rankGoals === 1) badgesHtml += '<span class="badge gold">👑 득점왕 (1위)</span>';
@@ -282,11 +317,68 @@
             if (scoreDefense >= 80) badgesHtml += '<span class="badge">🛡️ 통곡의 벽</span>';
             if (myStat.mom >= 2) badgesHtml += '<span class="badge">⭐ 크랙</span>';
             if (myStat.mip >= 2) badgesHtml += '<span class="badge">📈 폭풍성장</span>';
-            if (myStat.apps >= 5 && scoreOffense < 50 && scoreDefense >= 70) badgesHtml += '<span class="badge">🥷 수비 헌신</span>';
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
 
 
-            // 🔥 [신규 1] 포지션 히트맵 & 주 포지션 추출 연산
+            // 🔥 [신규] 티어형 마일스톤 연산 로직
+            let maxPointStreak = 0, currentStreak = 0;
+            [...myGames].reverse().forEach(g => {
+                if (g.myGoals + g.myAssists > 0) {
+                    currentStreak++;
+                    if(currentStreak > maxPointStreak) maxPointStreak = currentStreak;
+                } else {
+                    currentStreak = 0;
+                }
+            });
+
+            // 티어 평가 함수 (값, 허들배열 반환 -> 티어, 진행률, 다음목표)
+            function getTierInfo(val, thresholds) {
+                const tiers = ['None', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'GOD'];
+                let tierIndex = 0;
+                for (let i = 0; i < thresholds.length; i++) {
+                    if (val >= thresholds[i]) tierIndex = i + 1;
+                    else break;
+                }
+                const currentTier = tiers[tierIndex];
+                const nextGoal = tierIndex < thresholds.length ? thresholds[tierIndex] : 'MAX';
+                const progress = nextGoal === 'MAX' ? 100 : Math.min(100, (val / nextGoal) * 100);
+                return { tier: currentTier, nextGoal, progress };
+            }
+
+            const milestones = [
+                { id: 'goals', name: '득점 머신', icon: '⚽', val: myStat.goals, t: [1, 5, 10, 20, 50, 100], desc: '통산 득점' },
+                { id: 'assists', name: '특급 도우미', icon: '👟', val: myStat.assists, t: [1, 5, 10, 20, 50, 100], desc: '통산 도움' },
+                { id: 'apps', name: '개근상', icon: '🏃', val: myStat.apps, t: [5, 10, 30, 50, 100, 200], desc: '경기 출장' },
+                { id: 'targets', name: '택배 배송망', icon: '📦', val: myAssistTargets.size, t: [1, 3, 5, 10, 15, 20], desc: '다양한 사람에게 어시' },
+                { id: 'teammates', name: '핵인싸', icon: '🙌', val: myTeammates.size, t: [5, 10, 15, 20, 25, 30], desc: '다양한 동료와 출전' },
+                { id: 'positions', name: '올라운더', icon: '🧭', val: myPositions.size, t: [2, 4, 6, 8, 9, 10], desc: '다양한 포지션 소화' },
+                { id: 'cleansheet', name: '통곡의 벽', icon: '🛡️', val: cleanSheets, t: [1, 3, 5, 10, 20, 50], desc: '무실점 경기 달성' },
+                { id: 'streak', name: '연속 포인트', icon: '🔥', val: maxPointStreak, t: [2, 3, 5, 7, 10, 15], desc: '연속 공격포인트 달성' }
+            ];
+
+            let trophyHtml = '<div class="trophy-grid">';
+            milestones.forEach(m => {
+                const info = getTierInfo(m.val, m.t);
+                const lockedClass = info.tier === 'None' ? 'trophy-locked' : '';
+                const progressText = info.nextGoal === 'MAX' ? 'MASTER' : `${m.val} / ${info.nextGoal}`;
+                const barColor = info.tier === 'None' ? '#a0aec0' : (info.tier === 'GOD' ? '#ed64a6' : '#3182ce');
+
+                trophyHtml += `
+                    <div class="trophy-item ${lockedClass}">
+                        <div class="tier-badge tier-${info.tier}">${info.tier === 'None' ? 'LOCKED' : info.tier.toUpperCase()}</div>
+                        <div class="trophy-icon">${m.icon}</div>
+                        <div class="trophy-name">${m.name}</div>
+                        <div class="trophy-desc">${m.desc}</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${info.progress}%; background: ${barColor};"></div>
+                        </div>
+                        <span class="progress-text">${progressText}</span>
+                    </div>
+                `;
+            });
+            trophyHtml += '</div>';
+
+            // 포지션 히트맵 연산
             const posStats = {};
             let totalPosGames = 0;
             myGames.forEach(mg => {
@@ -307,77 +399,7 @@
                 }
             }
 
-
-            // 🔥 [신규 2] 플레이 스타일 자동 태깅 (MBTI 방식)(수정예정)
-            // let playStyleTag = "🌱 무한한 잠재력을 가진 유망주";
-            // const isFixo = mainPos.includes('Fixo');
-            // const isAla = mainPos.includes('Ala');
-            // const isPivo = mainPos.includes('Pivo');
-
-            // if (myStat.goals >= myStat.assists * 2 && myStat.goals >= 3) {
-            //     playStyleTag = "🔥 이기적인 득점 기계 (포처)";
-            // } else if (myStat.assists >= myStat.goals * 1.5 && myStat.assists >= 3) {
-            //     playStyleTag = "🎯 정밀 타격 택배 기사";
-            // } else if (myStat.apps >= 5 && points < 2 && scoreDefense >= 70 && isFixo) {
-            //     playStyleTag = "🛡️ 보이지 않는 헌신, 국밥 수비수";
-            // } else if (ptsPercent >= 60 && myStat.apps >= 5) {
-            //     playStyleTag = "🍀 그라운드를 지배하는 승리 토템";
-            // } else if (myStat.mom >= 2) {
-            //     playStyleTag = "⭐ 위기를 기회로, 슈퍼 크랙";
-            // } else if (isAla && scorePass >= 70) {
-            //     playStyleTag = "⚡ 쉴 새 없이 뛰는 측면의 지배자";
-            // }
-
-
-            // 🔥 [신규 3] 마일스톤 & 트로피 진열장 (업적 시스템) 연산
-            const hasFirstGoal = myStat.goals >= 1;
-            const hasHatTrick = myGames.some(g => g.myGoals >= 3);
-            const has10Apps = myStat.apps >= 10;
-            
-            // 3연속 공격포인트 (과거 -> 최신 순으로 배열 뒤집어서 탐색)
-            let maxPointStreak = 0;
-            let currentStreak = 0;
-            [...myGames].reverse().forEach(g => {
-                if (g.myGoals + g.myAssists > 0) {
-                    currentStreak++;
-                    if(currentStreak > maxPointStreak) maxPointStreak = currentStreak;
-                } else {
-                    currentStreak = 0;
-                }
-            });
-            const has3PointStreak = maxPointStreak >= 3;
-
-            // 무실점 경기(클린시트) 확인
-            const hasCleanSheet = myGames.some(g => {
-                const conceded = g.myTeam === 'A' ? g.gameInfo.team_b_score : g.gameInfo.team_a_score;
-                return conceded === 0 && g.gameInfo.match_days.match_type !== '교류전'; 
-            });
-
-            const has10Assists = myStat.assists >= 10;
-
-            const trophies = [
-                { id: 1, icon: '⚽', name: '마수걸이 골', desc: '통산 첫 득점 달성', unlocked: hasFirstGoal },
-                { id: 2, icon: '🎩', name: '해트트릭', desc: '한 경기 3골 이상', unlocked: hasHatTrick },
-                { id: 3, icon: '🏃‍♀️', name: '10경기 출전', desc: '꾸준한 참여의 증명', unlocked: has10Apps },
-                { id: 4, icon: '🛡️', name: '통곡의 벽', desc: '무실점 수비 성공', unlocked: hasCleanSheet },
-                { id: 5, icon: '🔥', name: '3연속 공격P', desc: '3경기 연속 포인트', unlocked: has3PointStreak },
-                { id: 6, icon: '🤝', name: '도움 10개', desc: '통산 10어시스트', unlocked: has10Assists }
-            ];
-
-            let trophyHtml = '<div class="trophy-grid">';
-            trophies.forEach(t => {
-                const lockedClass = t.unlocked ? '' : 'locked';
-                trophyHtml += `
-                    <div class="trophy-item ${lockedClass}">
-                        <div class="trophy-icon">${t.icon}</div>
-                        <div class="trophy-name">${t.name}</div>
-                        <div class="trophy-desc">${t.desc}</div>
-                    </div>
-                `;
-            });
-            trophyHtml += '</div>';
-
-            // 관계도 연산
+            // 관계도 연산 (기존 동일)
             const duoStats = {}; 
             const enemyStats = {}; 
             const assistStats = {}; 
@@ -388,7 +410,6 @@
                 const winner = gameTeams[gameId].winner;
 
                 let myTeamArr = null, enemyTeamArr = null, myTeamWinner = null;
-                
                 if (teamA.includes(targetId)) { myTeamArr = teamA; enemyTeamArr = teamB; myTeamWinner = 'A'; }
                 else if (teamB.includes(targetId)) { myTeamArr = teamB; enemyTeamArr = teamA; myTeamWinner = 'B'; }
 
@@ -465,7 +486,6 @@
                 return html;
             }
 
-            // 최근 3경기를 분석하여 기세(Trend) 계산
             const recent3 = myGames.slice(0, 3);
             let formTrendHtml = '<span style="color:#a0aec0; font-weight:bold;">데이터 부족</span>';
             if (recent3.length >= 2) {
@@ -555,8 +575,6 @@
                     <div class="profile-img-placeholder">${targetName.charAt(0)}</div>
                     <h1 class="player-name">${targetName}</h1>
                     
-                    <div class="play-style-tag">${playStyleTag}</div>
-                    
                     <div style="font-size:14px; opacity:0.9;">${teamText}</div>
                     <div class="player-badges">${badgesHtml}</div>
                 </div>
@@ -575,8 +593,8 @@
                     </div>
 
                     <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);">
-                        <div class="card-title">🏆 마일스톤 & 트로피 진열장</div>
-                        <p style="font-size:11px; color:#718096; margin-top:-10px; margin-bottom:15px;">* 기록을 달성하여 회색으로 잠긴 뱃지들을 컬러로 해금하세요!</p>
+                        <div class="card-title">🏆 풉살 마일스톤 진열장</div>
+                        <p style="font-size:11px; color:#718096; margin-top:-10px; margin-bottom:15px;">* 단계별 목표를 달성하여 브론즈부터 GOD 티어까지 진급하세요!</p>
                         ${trophyHtml}
                     </div>
 
