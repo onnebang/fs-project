@@ -482,7 +482,7 @@
             const statsArray = activePlayers.map(s => {
                 const points = s.goals + s.assists;
                 const gd = s.teamGoals - s.conceded; 
-                const ptsPercent = s.apps > 0 ? Math.round(((s.wins * 3 + s.draws * 1) / (s.apps * 3)) * 100) : 0;
+                const ptsPercent = s.apps > 0 ? Math.round(((s.wins * 3 + s.draws * 1.5) / (s.apps * 3)) * 100) : 0;
                 const avgGoals = (s.goals / s.apps).toFixed(2);
                 const avgAssists = (s.assists / s.apps).toFixed(2);
                 const avgPoints = (points / s.apps).toFixed(2);
