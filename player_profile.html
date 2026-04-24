@@ -146,7 +146,8 @@
                             isMom: l.is_mom,
                             isMip: l.is_mip,
                             myGoals: 0,
-                            myAssists: 0
+                            myAssists: 0,
+                            position: l.position
                         });
                     }
                 }
@@ -465,6 +466,61 @@
                 // ex: "FC 풉살 | 26' 상반기: 원배&경표팀"
                 teamText = `FC 풉살 <span style="color:#ecc94b; margin-left:5px; font-weight:bold;">| 26' 상반기: ${targetPlayer.affiliation}팀</span>`;
             }
+            // 🔥 포지션 히트맵 & 지표 연산
+            const posStats = {};
+            let totalPosGames = 0;
+            
+            myGames.forEach(mg => {
+                if (mg.position && !mg.position.startsWith('Blank')) {
+                    if (!posStats[mg.position]) posStats[mg.position] = { apps: 0, wins: 0, draws: 0 };
+                    posStats[mg.position].apps++;
+                    if (mg.result === 'win') posStats[mg.position].wins++;
+                    if (mg.result === 'draw') posStats[mg.position].draws++;
+                    totalPosGames++;
+                }
+            });
+
+            let mainPos = '-', mainPosApps = 0;
+            for (const pos in posStats) {
+                if (posStats[pos].apps > mainPosApps) {
+                    mainPosApps = posStats[pos].apps;
+                    mainPos = pos.replace('_', ' '); // 언더바 제거 표기
+                }
+            }
+
+            // 히트맵 그리기
+            function renderHeatmap() {
+                if (totalPosGames === 0) return '<div style="color:#a0aec0; text-align:center; padding:20px; font-size:13px;">포지션 기록이 쌓이지 않았습니다.</div>';
+                
+                const zones = ['Pivo_L', 'Pivo', 'Pivo_R', 'Ala_L', 'C_Ala', 'Ala_R', 'Fixo_L', 'Fixo', 'Fixo_R', 'Blank1', 'GK', 'Blank2'];
+                let html = '<div style="background:#1a202c; border:2px solid #cbd5e0; border-radius:12px; padding:10px; max-width:280px; margin:0 auto; position:relative;">';
+                html += '<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">';
+                
+                zones.forEach(zone => {
+                    if (zone.startsWith('Blank')) { html += '<div></div>'; return; }
+                    const stat = posStats[zone];
+                    
+                    let bgStr = 'rgba(255,255,255,0.05)';
+                    let textStr = `<div style="font-size:9px; color:#718096; margin-bottom:2px;">${zone.replace('_',' ')}</div>`;
+                    
+                    if (stat) {
+                        const ratio = stat.apps / totalPosGames; // 0 ~ 1 비율
+                        const alpha = Math.min(0.9, 0.2 + ratio); // 불투명도 조절
+                        bgStr = `rgba(229, 62, 62, ${alpha})`; // 빨간색 히트맵
+                        
+                        const winRate = Math.round(((stat.wins * 3 + stat.draws * 1) / (stat.apps * 3)) * 100);
+                        textStr += `<span style="font-size:12px; color:white; font-weight:900;">${stat.apps}회</span><br><span style="font-size:10px; color:#fbd38d;">${winRate}%</span>`;
+                    } else {
+                        textStr += `<span style="font-size:10px; color:#4a5568;">-</span>`;
+                    }
+                    
+                    html += `<div style="background: ${bgStr}; border-radius:6px; height:55px; display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px solid rgba(255,255,255,0.1); text-align:center; line-height:1.1;">
+                        ${textStr}
+                    </div>`;
+                });
+                html += '</div></div>';
+                return html;
+            }
 
             document.getElementById('app').innerHTML = `
                 <div class="top-nav">
@@ -500,7 +556,20 @@
                         </div>
                         <p style="font-size:11px; color:#a0aec0; text-align:center; margin-top:10px;">* 해당 수치는 팀 내 데이터를 기준으로 한 상대적 지표입니다.</p>
                     </div>
-
+                    
+                    <div class="card">
+                        <div class="card-title">🔥 포지션 히트맵 및 분석</div>
+                        <p style="font-size:11px; color:#718096; margin-top:-10px; text-align:center;">* 출전 횟수에 따라 붉은색이 진해지며, 승점률이 표기됩니다.</p>
+                        
+                        ${renderHeatmap()}
+                        
+                        <div style="margin-top:15px; text-align:center; font-size:14px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <span style="color:#718096; font-weight:bold;">🏆 나의 주 포지션:</span> 
+                            <span style="font-weight:900; color:#e53e3e; font-size:16px;">${mainPos}</span> 
+                            <span style="font-size:12px; color:#a0aec0;">(${totalPosGames > 0 ? Math.round((mainPosApps/totalPosGames)*100) : 0}% 출전)</span>
+                        </div>
+                    </div>
+                    
                     <div class="card" style="background:transparent; box-shadow:none; padding:0;">
                         <h3 style="margin-top:10px; margin-bottom:15px; color:#2d3748; font-size:18px;">🤝 나의 인물 관계도 (Top 5)</h3>
                         
