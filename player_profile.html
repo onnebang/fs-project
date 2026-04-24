@@ -464,13 +464,27 @@
                     <a href="index.html" class="back-btn">←</a>
                 </div>
 
+            // 🔥 소속팀 텍스트 동적 생성
+            let teamText = "FC 풉살 소속";
+            if (targetPlayer.affiliation && targetPlayer.affiliation !== '기타') {
+                // ex: "FC 풉살 | 26' 상반기: 원배&경표팀"
+                teamText = `FC 풉살 <span style="color:#ecc94b; margin-left:5px; font-weight:bold;">| 26' 상반기: ${targetPlayer.affiliation}팀</span>`;
+            }
+
+            document.getElementById('app').innerHTML = `
+                <div class="top-nav">
+                    <a href="index.html" class="back-btn">←</a>
+                </div>
+
                 <div class="hero">
                     <div class="profile-img-placeholder">${targetName.charAt(0)}</div>
                     <h1 class="player-name">${targetName}</h1>
-                    <div style="font-size:14px; opacity:0.9;">FC 풉살 소속</div>
+                    
+                    <div style="font-size:14px; opacity:0.9;">${teamText}</div>
+                    
                     <div class="player-badges">${badgesHtml}</div>
                 </div>
-
+                
                 <div class="container">
                     <div class="stat-grid">
                         <div class="stat-box"><div class="stat-val">${myStat.apps}</div><div class="stat-label">출전경기</div></div>
