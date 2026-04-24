@@ -443,8 +443,8 @@
                     if (isRate) {
                         if (statsObj[id].games >= minGames) {
                             let val = 0;
-                            if (type === 'duo') val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1) / (statsObj[id].games * 3)) * 100;
-                            else if (type === 'enemy') val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1) / (statsObj[id].games * 3)) * 100;
+                            if (type === 'duo') val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1.5) / (statsObj[id].games * 3)) * 100;
+                            else if (type === 'enemy') val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1.5) / (statsObj[id].games * 3)) * 100;
                             results.push({ id, val: Math.round(val), games: statsObj[id].games });
                         }
                     } else {
