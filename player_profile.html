@@ -199,11 +199,46 @@
             const maxPass = Math.max(...activePlayers.map(s => s.passFactor));
             const maxStar = Math.max(...activePlayers.map(s => s.starFactor));
 
-            // 팀 내 최고 스탯 보유자 색출 (뱃지용)
-            const maxGoals = Math.max(0, ...activePlayers.map(p => p.goals));
-            const maxAssists = Math.max(0, ...activePlayers.map(p => p.assists));
+            // ---------------------------------------------------------
+            // 🔥 순위 및 뱃지 연산 (Top 5 확장 및 무패 행진 추가)
+            // ---------------------------------------------------------
+            
+            // 팀 전체 스탯 연산 (랭킹 산출용)
+            activePlayers.forEach(p => {
+                p.points = p.goals + p.assists;
+                p.ptsPercent = p.apps > 0 ? Math.round(((p.wins * 3 + p.draws * 1) / (p.apps * 3)) * 100) : 0;
+            });
 
-            // 철강왕 (상위 10% 출전자) 컷오프 계산
+            // 순위 계산 헬퍼 함수 (공동 순위 반영)
+            function getPlayerRank(playerId, array, key, minApps = 1) {
+                // 조건에 맞는 선수만 필터링 (최소 출전 수 및 값이 0보다 큰 경우)
+                const validPlayers = array.filter(p => p.apps >= minApps && p[key] > 0)
+                                          .sort((a, b) => b[key] - a[key]);
+                if (validPlayers.length === 0) return null;
+
+                let rank = 1;
+                for (let i = 0; i < validPlayers.length; i++) {
+                    if (i > 0 && validPlayers[i][key] < validPlayers[i - 1][key]) {
+                        rank = i + 1;
+                    }
+                    if (validPlayers[i].id === playerId) {
+                        return rank <= 5 ? rank : null; // 5위 이내만 반환
+                    }
+                }
+                return null;
+            }
+
+            // 각 부문별 내 순위
+            const rankGoals = getPlayerRank(targetId, activePlayers, 'goals');
+            const rankAssists = getPlayerRank(targetId, activePlayers, 'assists');
+            const rankPoints = getPlayerRank(targetId, activePlayers, 'points');
+            const rankPtsPercent = getPlayerRank(targetId, activePlayers, 'ptsPercent', 2); // 승점률은 최소 2경기 이상
+
+            // 최근 5경기 무패 확인 (5경기를 뛰었고, 패배가 0번일 때)
+            const recent5 = myGames.slice(0, 5);
+            const isUndefeated5 = recent5.length === 5 && recent5.every(g => g.result !== 'loss');
+
+            // 철강왕 (상위 10% 출전) 컷오프 계산
             const sortedByApps = [...activePlayers].sort((a,b) => b.apps - a.apps);
             const top10PercentIndex = Math.floor(sortedByApps.length * 0.1);
             const ironmanThreshold = sortedByApps.length > 0 ? sortedByApps[Math.max(0, top10PercentIndex - 1)].apps : 0;
@@ -233,30 +268,50 @@
             const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
 
-            // 🔥 뱃지(타이틀) 시스템 대폭 강화
+            // 🔥 뱃지(타이틀) 시스템 대폭 강화 조립
             let badgesHtml = '';
             
-            // 1. 절대 1위 타이틀 (골드 뱃지)
-            if (myStat.goals > 0 && myStat.goals === maxGoals) badgesHtml += '<span class="badge gold">👑 득점왕 (1위)</span>';
-            if (myStat.assists > 0 && myStat.assists === maxAssists) badgesHtml += '<span class="badge gold">👟 도움왕 (1위)</span>';
+            // 1. Top 5 랭킹 뱃지
+            if (rankGoals) {
+                if (rankGoals === 1) badgesHtml += '<span class="badge gold">👑 득점왕 (1위)</span>';
+                else badgesHtml += `<span class="badge">⚽ 득점 ${rankGoals}위</span>`;
+            }
+            if (rankAssists) {
+                if (rankAssists === 1) badgesHtml += '<span class="badge gold">👟 도움왕 (1위)</span>';
+                else badgesHtml += `<span class="badge">👟 도움 ${rankAssists}위</span>`;
+            }
+            if (rankPoints) {
+                if (rankPoints === 1) badgesHtml += '<span class="badge gold">🎯 공격P (1위)</span>';
+                else badgesHtml += `<span class="badge">🎯 공격P ${rankPoints}위</span>`;
+            }
+            if (rankPtsPercent) {
+                if (rankPtsPercent === 1) badgesHtml += '<span class="badge gold">🍀 승점요정 (1위)</span>';
+                else badgesHtml += `<span class="badge">🍀 승점요정 ${rankPtsPercent}위</span>`;
+            }
+
+            // 2. 무패 행진 뱃지 (최근 5경기)
+            if (isUndefeated5) {
+                badgesHtml += '<span class="badge" style="border-color:#38a169; color:#38a169; background:rgba(56,161,105,0.15);">🛡️ 5경기 무패</span>';
+            }
             
-            // 2. 철강왕 (상위 10% 출전)
+            // 3. 철강왕 (상위 10% 출전)
             if (myStat.apps > 0 && myStat.apps >= ironmanThreshold && myStat.apps >= 3) badgesHtml += '<span class="badge">🤖 철강왕</span>';
 
-            // 3. 육각형 기반 뱃지 (기준 완화: 80 -> 75)
+            // 4. 육각형 차트 기반 뱃지 (기준 완화: 75점)
             if (scoreOffense >= 75) badgesHtml += '<span class="badge">🔥 골잡이</span>';
             if (scorePass >= 75) badgesHtml += '<span class="badge">🤝 패스마스터</span>';
             if (scoreDefense >= 80) badgesHtml += '<span class="badge">🛡️ 통곡의 벽</span>';
             
-            // 4. 특별 뱃지
+            // 5. 특별 뱃지
             if (myStat.mom >= 2) badgesHtml += '<span class="badge">⭐ 크랙</span>';
             if (myStat.mip >= 2) badgesHtml += '<span class="badge">📈 폭풍성장</span>';
-            if (ptsPercent >= 50) badgesHtml += '<span class="badge">🍀 승점요정</span>';
             
-            // 언성 히어로 (헌신적인 수비형 플레이어)
-            if (myStat.apps >= 5 && scoreOffense < 50 && scoreDefense >= 70) badgesHtml += '<span class="badge">🥷 수비헌신</span>';
+            // 언성 히어로
+            if (myStat.apps >= 5 && scoreOffense < 50 && scoreDefense >= 70) badgesHtml += '<span class="badge">🥷 수비 헌신</span>';
 
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
+
+            // 3. 관계도 (Top 5 추출 로직으로 확장)
 
             // 3. 관계도 (Top 5 추출 로직으로 확장)
             const duoStats = {}; 
