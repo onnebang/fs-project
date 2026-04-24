@@ -22,6 +22,10 @@
         .hero::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); pointer-events: none; }
         .profile-img-placeholder { width: 90px; height: 90px; background: white; border-radius: 50%; margin: 0 auto 15px auto; display: flex; justify-content: center; align-items: center; font-size: 36px; font-weight: 900; color: #2b6cb0; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 4px solid rgba(255,255,255,0.3); }
         .player-name { font-size: 32px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; }
+        
+        /* ✨ 신규: 플레이 스타일 태그 */
+        .play-style-tag { font-size: 15px; font-weight: 900; color: #ecc94b; background: rgba(0,0,0,0.3); padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(236,201,75,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.2); letter-spacing: -0.5px; }
+
         .player-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; max-width: 350px; margin-left: auto; margin-right: auto; }
         .badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .badge.gold { border-color: #ecc94b; color: #ecc94b; background: rgba(236,201,75,0.15); }
@@ -37,6 +41,14 @@
         .card-title { font-size: 16px; font-weight: 900; color: #2d3748; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; }
 
         .chart-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; aspect-ratio: 1 / 1; }
+
+        /* ✨ 신규: 트로피 진열장 UI */
+        .trophy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .trophy-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px 5px; text-align: center; transition: 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .trophy-item.locked { filter: grayscale(100%); opacity: 0.4; background: #edf2f7; }
+        .trophy-icon { font-size: 28px; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .trophy-name { font-size: 11px; font-weight: 900; color: #2d3748; }
+        .trophy-desc { font-size: 9px; color: #718096; margin-top: 3px; font-weight: bold; letter-spacing: -0.5px; }
 
         .relation-item { display: flex; flex-direction: column; align-items: flex-start; padding: 15px; border-radius: 12px; background: #f8fafc; margin-bottom: 15px; border: 1px solid #edf2f7; }
         .relation-header { display: flex; align-items: center; width: 100%; margin-bottom: 12px; }
@@ -109,7 +121,6 @@
             const playersMap = {};
             playersRes.data.forEach(p => playersMap[p.id] = p.name);
 
-            // 1. 전체 선수 스탯 초기화
             const stats = {};
             playersRes.data.forEach(p => {
                 stats[p.id] = { id: p.id, name: p.name, apps: 0, wins: 0, draws: 0, losses: 0, playTime: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0, mom: 0, mip: 0 };
@@ -153,7 +164,6 @@
                 }
             });
 
-            // 🔥 내 출전 경기 최신순 정렬 (가장 중요한 버그 수정)
             myGames.sort((a, b) => new Date(b.gameInfo.created_at) - new Date(a.gameInfo.created_at));
 
             goalsRes.data.forEach(g => {
@@ -181,7 +191,7 @@
             const ptsPercent = myStat.apps > 0 ? Math.round(((myStat.wins * 3 + myStat.draws * 1) / (myStat.apps * 3)) * 100) : 0;
             const p90 = myStat.playTime > 0 ? ((myStat.goals / myStat.playTime) * 90).toFixed(2) : "0.00";
 
-            // 2. 육각형 차트 연산 및 전체 통계 산출
+            // 육각형 차트 연산
             const activePlayers = Object.values(stats).filter(s => s.apps > 0);
             const totalTeamGames = gamesData.length; 
 
@@ -200,46 +210,27 @@
             const maxPass = Math.max(...activePlayers.map(s => s.passFactor));
             const maxStar = Math.max(...activePlayers.map(s => s.starFactor));
 
-            // ---------------------------------------------------------
-            // 🔥 순위 및 뱃지 연산 (Top 5 확장 및 무패 행진 추가)
-            // ---------------------------------------------------------
-            
-            // 팀 전체 스탯 연산 (랭킹 산출용)
-            activePlayers.forEach(p => {
-                p.points = p.goals + p.assists;
-                p.ptsPercent = p.apps > 0 ? Math.round(((p.wins * 3 + p.draws * 1) / (p.apps * 3)) * 100) : 0;
-            });
-
-            // 순위 계산 헬퍼 함수 (공동 순위 반영)
+            // 순위 계산 함수
+            activePlayers.forEach(p => { p.points = p.goals + p.assists; p.ptsPercent = p.apps > 0 ? Math.round(((p.wins * 3 + p.draws * 1) / (p.apps * 3)) * 100) : 0; });
             function getPlayerRank(playerId, array, key, minApps = 1) {
-                // 조건에 맞는 선수만 필터링 (최소 출전 수 및 값이 0보다 큰 경우)
-                const validPlayers = array.filter(p => p.apps >= minApps && p[key] > 0)
-                                          .sort((a, b) => b[key] - a[key]);
+                const validPlayers = array.filter(p => p.apps >= minApps && p[key] > 0).sort((a, b) => b[key] - a[key]);
                 if (validPlayers.length === 0) return null;
-
                 let rank = 1;
                 for (let i = 0; i < validPlayers.length; i++) {
-                    if (i > 0 && validPlayers[i][key] < validPlayers[i - 1][key]) {
-                        rank = i + 1;
-                    }
-                    if (validPlayers[i].id === playerId) {
-                        return rank <= 5 ? rank : null; // 5위 이내만 반환
-                    }
+                    if (i > 0 && validPlayers[i][key] < validPlayers[i - 1][key]) rank = i + 1;
+                    if (validPlayers[i].id === playerId) return rank <= 5 ? rank : null;
                 }
                 return null;
             }
 
-            // 각 부문별 내 순위
             const rankGoals = getPlayerRank(targetId, activePlayers, 'goals');
             const rankAssists = getPlayerRank(targetId, activePlayers, 'assists');
             const rankPoints = getPlayerRank(targetId, activePlayers, 'points');
-            const rankPtsPercent = getPlayerRank(targetId, activePlayers, 'ptsPercent', 2); // 승점률은 최소 2경기 이상
+            const rankPtsPercent = getPlayerRank(targetId, activePlayers, 'ptsPercent', 2);
 
-            // 최근 5경기 무패 확인 (5경기를 뛰었고, 패배가 0번일 때)
             const recent5 = myGames.slice(0, 5);
             const isUndefeated5 = recent5.length === 5 && recent5.every(g => g.result !== 'loss');
 
-            // 철강왕 (상위 10% 출전) 컷오프 계산
             const sortedByApps = [...activePlayers].sort((a,b) => b.apps - a.apps);
             const top10PercentIndex = Math.floor(sortedByApps.length * 0.1);
             const ironmanThreshold = sortedByApps.length > 0 ? sortedByApps[Math.max(0, top10PercentIndex - 1)].apps : 0;
@@ -252,7 +243,6 @@
             function getScore(value, maxExpected) { return Math.min(100, Math.round((value / maxExpected) * 100)); }
             
             const myCalcStat = activePlayers.find(s => s.id === targetId);
-
             const scoreOffense = maxOffense > 0 ? getScore(myCalcStat.offenseFactor, maxOffense) : 0;
             const scorePass = maxPass > 0 ? getScore(myCalcStat.passFactor, maxPass) : 0;
             const scoreStar = maxStar > 0 ? getScore(myCalcStat.starFactor, maxStar) : 0;
@@ -262,17 +252,13 @@
                 const clampedMyConc = Math.max(minConc, Math.min(maxConc, myCalcStat.avgConc));
                 const concRatio = (clampedMyConc - minConc) / (maxConc - minConc);
                 scoreDefense = Math.max(40, Math.round(100 - (concRatio * 60))); 
-            } else {
-                scoreDefense = 70; 
-            }
+            } else { scoreDefense = 70; }
 
             const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
 
-            // 🔥 뱃지(타이틀) 시스템 대폭 강화 조립
+            // 🔥 [기존] 뱃지 시스템 조립 (Top 5 등)
             let badgesHtml = '';
-            
-            // 1. Top 5 랭킹 뱃지
             if (rankGoals) {
                 if (rankGoals === 1) badgesHtml += '<span class="badge gold">👑 득점왕 (1위)</span>';
                 else badgesHtml += `<span class="badge">⚽ 득점 ${rankGoals}위</span>`;
@@ -289,32 +275,109 @@
                 if (rankPtsPercent === 1) badgesHtml += '<span class="badge gold">🍀 승점요정 (1위)</span>';
                 else badgesHtml += `<span class="badge">🍀 승점요정 ${rankPtsPercent}위</span>`;
             }
-
-            // 2. 무패 행진 뱃지 (최근 5경기)
-            if (isUndefeated5) {
-                badgesHtml += '<span class="badge" style="border-color:#38a169; color:#38a169; background:rgba(56,161,105,0.15);">🛡️ 5경기 무패</span>';
-            }
-            
-            // 3. 철강왕 (상위 10% 출전)
+            if (isUndefeated5) badgesHtml += '<span class="badge" style="border-color:#38a169; color:#38a169; background:rgba(56,161,105,0.15);">🛡️ 5경기 무패</span>';
             if (myStat.apps > 0 && myStat.apps >= ironmanThreshold && myStat.apps >= 3) badgesHtml += '<span class="badge">🤖 철강왕</span>';
-
-            // 4. 육각형 차트 기반 뱃지 (기준 완화: 75점)
             if (scoreOffense >= 75) badgesHtml += '<span class="badge">🔥 골잡이</span>';
             if (scorePass >= 75) badgesHtml += '<span class="badge">🤝 패스마스터</span>';
             if (scoreDefense >= 80) badgesHtml += '<span class="badge">🛡️ 통곡의 벽</span>';
-            
-            // 5. 특별 뱃지
             if (myStat.mom >= 2) badgesHtml += '<span class="badge">⭐ 크랙</span>';
             if (myStat.mip >= 2) badgesHtml += '<span class="badge">📈 폭풍성장</span>';
-            
-            // 언성 히어로
             if (myStat.apps >= 5 && scoreOffense < 50 && scoreDefense >= 70) badgesHtml += '<span class="badge">🥷 수비 헌신</span>';
-
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
 
-            // 3. 관계도 (Top 5 추출 로직으로 확장)
 
-            // 3. 관계도 (Top 5 추출 로직으로 확장)
+            // 🔥 [신규 1] 포지션 히트맵 & 주 포지션 추출 연산
+            const posStats = {};
+            let totalPosGames = 0;
+            myGames.forEach(mg => {
+                if (mg.position && !mg.position.startsWith('Blank')) {
+                    if (!posStats[mg.position]) posStats[mg.position] = { apps: 0, wins: 0, draws: 0 };
+                    posStats[mg.position].apps++;
+                    if (mg.result === 'win') posStats[mg.position].wins++;
+                    if (mg.result === 'draw') posStats[mg.position].draws++;
+                    totalPosGames++;
+                }
+            });
+
+            let mainPos = '-', mainPosApps = 0;
+            for (const pos in posStats) {
+                if (posStats[pos].apps > mainPosApps) {
+                    mainPosApps = posStats[pos].apps;
+                    mainPos = pos.replace('_', ' '); 
+                }
+            }
+
+
+            // 🔥 [신규 2] 플레이 스타일 자동 태깅 (MBTI 방식)
+            let playStyleTag = "🌱 무한한 잠재력을 가진 유망주";
+            const isFixo = mainPos.includes('Fixo');
+            const isAla = mainPos.includes('Ala');
+            const isPivo = mainPos.includes('Pivo');
+
+            if (myStat.goals >= myStat.assists * 2 && myStat.goals >= 3) {
+                playStyleTag = "🔥 이기적인 득점 기계 (포처)";
+            } else if (myStat.assists >= myStat.goals * 1.5 && myStat.assists >= 3) {
+                playStyleTag = "🎯 정밀 타격 택배 기사";
+            } else if (myStat.apps >= 5 && points < 2 && scoreDefense >= 70 && isFixo) {
+                playStyleTag = "🛡️ 보이지 않는 헌신, 국밥 수비수";
+            } else if (ptsPercent >= 60 && myStat.apps >= 5) {
+                playStyleTag = "🍀 그라운드를 지배하는 승리 토템";
+            } else if (myStat.mom >= 2) {
+                playStyleTag = "⭐ 위기를 기회로, 슈퍼 크랙";
+            } else if (isAla && scorePass >= 70) {
+                playStyleTag = "⚡ 쉴 새 없이 뛰는 측면의 지배자";
+            }
+
+
+            // 🔥 [신규 3] 마일스톤 & 트로피 진열장 (업적 시스템) 연산
+            const hasFirstGoal = myStat.goals >= 1;
+            const hasHatTrick = myGames.some(g => g.myGoals >= 3);
+            const has10Apps = myStat.apps >= 10;
+            
+            // 3연속 공격포인트 (과거 -> 최신 순으로 배열 뒤집어서 탐색)
+            let maxPointStreak = 0;
+            let currentStreak = 0;
+            [...myGames].reverse().forEach(g => {
+                if (g.myGoals + g.myAssists > 0) {
+                    currentStreak++;
+                    if(currentStreak > maxPointStreak) maxPointStreak = currentStreak;
+                } else {
+                    currentStreak = 0;
+                }
+            });
+            const has3PointStreak = maxPointStreak >= 3;
+
+            // 무실점 경기(클린시트) 확인
+            const hasCleanSheet = myGames.some(g => {
+                const conceded = g.myTeam === 'A' ? g.gameInfo.team_b_score : g.gameInfo.team_a_score;
+                return conceded === 0 && g.gameInfo.match_days.match_type !== '교류전'; 
+            });
+
+            const has10Assists = myStat.assists >= 10;
+
+            const trophies = [
+                { id: 1, icon: '⚽', name: '마수걸이 골', desc: '통산 첫 득점 달성', unlocked: hasFirstGoal },
+                { id: 2, icon: '🎩', name: '해트트릭', desc: '한 경기 3골 이상', unlocked: hasHatTrick },
+                { id: 3, icon: '🏃‍♀️', name: '10경기 출전', desc: '꾸준한 참여의 증명', unlocked: has10Apps },
+                { id: 4, icon: '🛡️', name: '통곡의 벽', desc: '무실점 수비 성공', unlocked: hasCleanSheet },
+                { id: 5, icon: '🔥', name: '3연속 공격P', desc: '3경기 연속 포인트', unlocked: has3PointStreak },
+                { id: 6, icon: '🤝', name: '도움 10개', desc: '통산 10어시스트', unlocked: has10Assists }
+            ];
+
+            let trophyHtml = '<div class="trophy-grid">';
+            trophies.forEach(t => {
+                const lockedClass = t.unlocked ? '' : 'locked';
+                trophyHtml += `
+                    <div class="trophy-item ${lockedClass}">
+                        <div class="trophy-icon">${t.icon}</div>
+                        <div class="trophy-name">${t.name}</div>
+                        <div class="trophy-desc">${t.desc}</div>
+                    </div>
+                `;
+            });
+            trophyHtml += '</div>';
+
+            // 관계도 연산
             const duoStats = {}; 
             const enemyStats = {}; 
             const assistStats = {}; 
@@ -359,25 +422,20 @@
                     if (isRate) {
                         if (statsObj[id].games >= minGames) {
                             let val = 0;
-                            if (type === 'duo') {
-                                val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1) / (statsObj[id].games * 3)) * 100;
-                            } else if (type === 'enemy') {
-                                val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1) / (statsObj[id].games * 3)) * 100;
-                            }
+                            if (type === 'duo') val = ((statsObj[id].wins * 3 + statsObj[id].draws * 1) / (statsObj[id].games * 3)) * 100;
+                            else if (type === 'enemy') val = ((statsObj[id].myWins * 3 + statsObj[id].myDraws * 1) / (statsObj[id].games * 3)) * 100;
                             results.push({ id, val: Math.round(val), games: statsObj[id].games });
                         }
                     } else {
                         results.push({ id, val: statsObj[id] });
                     }
                 }
-
                 if (isRate) {
                     if (type === 'duo') results.sort((a, b) => b.val - a.val); 
                     else if (type === 'enemy') results.sort((a, b) => a.val - b.val); 
                 } else {
                     results.sort((a, b) => b.val - a.val); 
                 }
-                
                 return results.slice(0, 5); 
             }
 
@@ -387,26 +445,18 @@
 
             function renderRelationList(arr, type, basePercent) {
                 if (!arr || arr.length === 0) return '<div style="color:#a0aec0; font-size:13px; text-align:center; padding:15px 0; width:100%;">충분한 데이터가 없습니다. (최소 2경기)</div>';
-                
                 let html = '<div style="display:flex; flex-direction:column; gap:8px; width:100%;">';
                 arr.forEach((item, idx) => {
                     const name = playersMap[item.id];
                     let statHtml = '';
-                    if (type === 'duo') {
-                        statHtml = `<span style="color:#a0aec0; text-decoration:line-through; font-size:11px; margin-right:4px;">${basePercent}%</span><span style="font-size:15px; color:#38a169; font-weight:900;">➡️ ${item.val}%</span>`;
-                    } else if (type === 'enemy') {
-                        statHtml = `<span style="color:#a0aec0; text-decoration:line-through; font-size:11px; margin-right:4px;">${basePercent}%</span><span style="font-size:15px; color:#e53e3e; font-weight:900;">➡️ ${item.val}%</span>`;
-                    } else if (type === 'assist') {
-                        statHtml = `<span style="font-size:15px; color:#3182ce; font-weight:900;">${item.val}골</span>`;
-                    }
+                    if (type === 'duo') statHtml = `<span style="color:#a0aec0; text-decoration:line-through; font-size:11px; margin-right:4px;">${basePercent}%</span><span style="font-size:15px; color:#38a169; font-weight:900;">➡️ ${item.val}%</span>`;
+                    else if (type === 'enemy') statHtml = `<span style="color:#a0aec0; text-decoration:line-through; font-size:11px; margin-right:4px;">${basePercent}%</span><span style="font-size:15px; color:#e53e3e; font-weight:900;">➡️ ${item.val}%</span>`;
+                    else if (type === 'assist') statHtml = `<span style="font-size:15px; color:#3182ce; font-weight:900;">${item.val}골</span>`;
                     
                     const gamesText = item.games ? `<span style="font-size:11px; color:#a0aec0; font-weight:normal; margin-left:5px;">(${item.games}전)</span>` : '';
-                    
                     html += `
                         <div style="display:flex; justify-content:space-between; align-items:center; background: white; padding: 10px 14px; border-radius:10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            <div style="font-size:14px; font-weight:bold; color:#2d3748;">
-                                <span style="color:#a0aec0; font-weight:900; width:18px; display:inline-block;">${idx+1}</span> ${name} ${gamesText}
-                            </div>
+                            <div style="font-size:14px; font-weight:bold; color:#2d3748;"><span style="color:#a0aec0; font-weight:900; width:18px; display:inline-block;">${idx+1}</span> ${name} ${gamesText}</div>
                             <div style="text-align:right; line-height:1.2;">${statHtml}</div>
                         </div>
                     `;
@@ -415,7 +465,7 @@
                 return html;
             }
 
-            // 🔥 최근 3경기를 분석하여 기세(Trend) 뱃지 텍스트 계산
+            // 최근 3경기를 분석하여 기세(Trend) 계산
             const recent3 = myGames.slice(0, 3);
             let formTrendHtml = '<span style="color:#a0aec0; font-weight:bold;">데이터 부족</span>';
             if (recent3.length >= 2) {
@@ -428,10 +478,8 @@
 
             let timelineHtml = '';
             myGames.slice(0, 5).forEach(mg => {
-                const isFriendly = mg.gameInfo.match_days.match_type === '교류전';
                 const date = mg.gameInfo.match_days.match_date;
                 const scoreTxt = `${mg.gameInfo.team_a_score} : ${mg.gameInfo.team_b_score}`;
-                
                 let resultClass = 'draw', resultText = '무승부';
                 if (mg.result === 'win') { resultClass = 'win'; resultText = '승리'; }
                 else if (mg.result === 'loss') { resultClass = 'loss'; resultText = '패배'; }
@@ -460,59 +508,29 @@
                 `;
             });
 
-            // 🔥 소속팀 텍스트 동적 생성
             let teamText = "FC 풉살 소속";
             if (targetPlayer.affiliation && targetPlayer.affiliation !== '기타') {
-                // ex: "FC 풉살 | 26' 상반기: 원배&경표팀"
                 teamText = `FC 풉살 <span style="color:#ecc94b; margin-left:5px; font-weight:bold;">| 26' 상반기: ${targetPlayer.affiliation}팀</span>`;
             }
-            // 🔥 포지션 히트맵 & 지표 연산
-            const posStats = {};
-            let totalPosGames = 0;
-            
-            myGames.forEach(mg => {
-                if (mg.position && !mg.position.startsWith('Blank')) {
-                    if (!posStats[mg.position]) posStats[mg.position] = { apps: 0, wins: 0, draws: 0 };
-                    posStats[mg.position].apps++;
-                    if (mg.result === 'win') posStats[mg.position].wins++;
-                    if (mg.result === 'draw') posStats[mg.position].draws++;
-                    totalPosGames++;
-                }
-            });
 
-            let mainPos = '-', mainPosApps = 0;
-            for (const pos in posStats) {
-                if (posStats[pos].apps > mainPosApps) {
-                    mainPosApps = posStats[pos].apps;
-                    mainPos = pos.replace('_', ' '); // 언더바 제거 표기
-                }
-            }
-            
-            // 히트맵 그리기 (가시성 및 데이터 대폭 강화)
             function renderHeatmap() {
                 if (totalPosGames === 0) return '<div style="color:#a0aec0; text-align:center; padding:20px; font-size:13px;">포지션 기록이 쌓이지 않았습니다.</div>';
-                
                 const zones = ['Pivo_L', 'Pivo', 'Pivo_R', 'Ala_L', 'C_Ala', 'Ala_R', 'Fixo_L', 'Fixo', 'Fixo_R', 'Blank1', 'GK', 'Blank2'];
-                
-                // 배경을 산뜻한 잔디 구장색(#2b8a3e)으로 변경하고 크기를 살짝 키웠습니다.
                 let html = '<div style="background:#2b8a3e; border:2px solid rgba(255,255,255,0.8); border-radius:12px; padding:12px; max-width:320px; margin:0 auto; position:relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);">';
                 html += '<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">';
                 
                 zones.forEach(zone => {
                     if (zone.startsWith('Blank')) { html += '<div></div>'; return; }
                     const stat = posStats[zone];
-                    
-                    let bgStr = 'rgba(255,255,255,0.1)'; // 기본 빈 공간 (반투명)
+                    let bgStr = 'rgba(255,255,255,0.1)';
                     let textStr = `<div style="font-size:10px; color:rgba(255,255,255,0.6); margin-bottom:4px; font-weight:bold; letter-spacing:-0.5px;">${zone.replace('_',' ')}</div>`;
                     
                     if (stat) {
-                        const ratio = stat.apps / totalPosGames; // 0 ~ 1 비율
-                        const alpha = Math.min(0.9, 0.3 + ratio * 0.7); // 최소 0.3의 불투명도 보장
-                        bgStr = `rgba(229, 62, 62, ${alpha})`; // 빨간색 히트맵
-                        
+                        const ratio = stat.apps / totalPosGames;
+                        const alpha = Math.min(0.9, 0.3 + ratio * 0.7);
+                        bgStr = `rgba(229, 62, 62, ${alpha})`;
                         const losses = stat.apps - stat.wins - stat.draws;
                         const winRate = Math.round(((stat.wins * 3 + stat.draws * 1) / (stat.apps * 3)) * 100);
-                        
                         textStr += `
                             <span style="font-size:15px; color:white; font-weight:900; line-height:1.1;">${stat.apps}전</span>
                             <span style="font-size:11px; color:#fbd38d; font-weight:bold; margin-top:2px;">${stat.wins}승 ${stat.draws}무 ${losses}패</span>
@@ -521,16 +539,13 @@
                     } else {
                         textStr += `<span style="font-size:12px; color:rgba(255,255,255,0.4); font-weight:bold;">기록 없음</span>`;
                     }
-                    
-                    // 셀 높이를 80px로 키워 정보가 답답하지 않게 배치
-                    html += `<div style="background: ${bgStr}; border-radius:8px; height:85px; display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px solid rgba(255,255,255,0.2); text-align:center; line-height:1.2; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: transform 0.2s;">
-                        ${textStr}
-                    </div>`;
+                    html += `<div style="background: ${bgStr}; border-radius:8px; height:85px; display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px solid rgba(255,255,255,0.2); text-align:center; line-height:1.2; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: transform 0.2s;">${textStr}</div>`;
                 });
                 html += '</div></div>';
                 return html;
             }
 
+            // HTML 렌더링 결합
             document.getElementById('app').innerHTML = `
                 <div class="top-nav">
                     <a href="index.html" class="back-btn">←</a>
@@ -540,8 +555,9 @@
                     <div class="profile-img-placeholder">${targetName.charAt(0)}</div>
                     <h1 class="player-name">${targetName}</h1>
                     
-                    <div style="font-size:14px; opacity:0.9;">${teamText}</div>
+                    <div class="play-style-tag">${playStyleTag}</div>
                     
+                    <div style="font-size:14px; opacity:0.9;">${teamText}</div>
                     <div class="player-badges">${badgesHtml}</div>
                 </div>
                 
@@ -556,6 +572,12 @@
                         </div>
                         <div class="stat-box"><div class="stat-val">${points}</div><div class="stat-label">공격포인트</div></div>
                         <div class="stat-box"><div class="stat-val">${p90}</div><div class="stat-label">P90 (득점력)</div></div>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);">
+                        <div class="card-title">🏆 마일스톤 & 트로피 진열장</div>
+                        <p style="font-size:11px; color:#718096; margin-top:-10px; margin-bottom:15px;">* 기록을 달성하여 회색으로 잠긴 뱃지들을 컬러로 해금하세요!</p>
+                        ${trophyHtml}
                     </div>
 
                     <div class="card">
