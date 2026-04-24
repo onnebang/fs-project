@@ -22,8 +22,9 @@
         .hero::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); pointer-events: none; }
         .profile-img-placeholder { width: 90px; height: 90px; background: white; border-radius: 50%; margin: 0 auto 15px auto; display: flex; justify-content: center; align-items: center; font-size: 36px; font-weight: 900; color: #2b6cb0; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 4px solid rgba(255,255,255,0.3); }
         .player-name { font-size: 32px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; }
-        .player-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+        .player-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; max-width: 350px; margin-left: auto; margin-right: auto; }
+        .badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .badge.gold { border-color: #ecc94b; color: #ecc94b; background: rgba(236,201,75,0.15); }
 
         .container { max-width: 800px; margin: -20px auto 0 auto; padding: 0 15px; position: relative; z-index: 5; }
 
@@ -151,6 +152,9 @@
                 }
             });
 
+            // 🔥 내 출전 경기 최신순 정렬 (가장 중요한 버그 수정)
+            myGames.sort((a, b) => new Date(b.gameInfo.created_at) - new Date(a.gameInfo.created_at));
+
             goalsRes.data.forEach(g => {
                 if (!g.is_own_goal && g.scorer_id && stats[g.scorer_id]) stats[g.scorer_id].goals += 1;
                 if (g.assist_id && stats[g.assist_id]) stats[g.assist_id].assists += 1;
@@ -176,7 +180,7 @@
             const ptsPercent = myStat.apps > 0 ? Math.round(((myStat.wins * 3 + myStat.draws * 1) / (myStat.apps * 3)) * 100) : 0;
             const p90 = myStat.playTime > 0 ? ((myStat.goals / myStat.playTime) * 90).toFixed(2) : "0.00";
 
-            // 2. 육각형 차트 연산
+            // 2. 육각형 차트 연산 및 전체 통계 산출
             const activePlayers = Object.values(stats).filter(s => s.apps > 0);
             const totalTeamGames = gamesData.length; 
 
@@ -194,6 +198,15 @@
             const maxOffense = Math.max(...activePlayers.map(s => s.offenseFactor));
             const maxPass = Math.max(...activePlayers.map(s => s.passFactor));
             const maxStar = Math.max(...activePlayers.map(s => s.starFactor));
+
+            // 팀 내 최고 스탯 보유자 색출 (뱃지용)
+            const maxGoals = Math.max(0, ...activePlayers.map(p => p.goals));
+            const maxAssists = Math.max(0, ...activePlayers.map(p => p.assists));
+
+            // 철강왕 (상위 10% 출전자) 컷오프 계산
+            const sortedByApps = [...activePlayers].sort((a,b) => b.apps - a.apps);
+            const top10PercentIndex = Math.floor(sortedByApps.length * 0.1);
+            const ironmanThreshold = sortedByApps.length > 0 ? sortedByApps[Math.max(0, top10PercentIndex - 1)].apps : 0;
 
             const validDefPlayers = activePlayers.filter(s => s.apps >= 2);
             const defPool = validDefPlayers.length > 0 ? validDefPlayers : activePlayers;
@@ -220,12 +233,29 @@
             const scoreWinning = ptsPercent;
             const scoreAttendance = getScore(myStat.apps, totalTeamGames);
 
+            // 🔥 뱃지(타이틀) 시스템 대폭 강화
             let badgesHtml = '';
-            if (scoreOffense >= 80) badgesHtml += '<span class="badge">🔥 골잡이</span>';
-            if (scorePass >= 80) badgesHtml += '<span class="badge">🤝 패스마스터</span>';
+            
+            // 1. 절대 1위 타이틀 (골드 뱃지)
+            if (myStat.goals > 0 && myStat.goals === maxGoals) badgesHtml += '<span class="badge gold">👑 득점왕 (1위)</span>';
+            if (myStat.assists > 0 && myStat.assists === maxAssists) badgesHtml += '<span class="badge gold">👟 도움왕 (1위)</span>';
+            
+            // 2. 철강왕 (상위 10% 출전)
+            if (myStat.apps > 0 && myStat.apps >= ironmanThreshold && myStat.apps >= 3) badgesHtml += '<span class="badge">🤖 철강왕</span>';
+
+            // 3. 육각형 기반 뱃지 (기준 완화: 80 -> 75)
+            if (scoreOffense >= 75) badgesHtml += '<span class="badge">🔥 골잡이</span>';
+            if (scorePass >= 75) badgesHtml += '<span class="badge">🤝 패스마스터</span>';
             if (scoreDefense >= 80) badgesHtml += '<span class="badge">🛡️ 통곡의 벽</span>';
+            
+            // 4. 특별 뱃지
             if (myStat.mom >= 2) badgesHtml += '<span class="badge">⭐ 크랙</span>';
+            if (myStat.mip >= 2) badgesHtml += '<span class="badge">📈 폭풍성장</span>';
             if (ptsPercent >= 50) badgesHtml += '<span class="badge">🍀 승점요정</span>';
+            
+            // 언성 히어로 (헌신적인 수비형 플레이어)
+            if (myStat.apps >= 5 && scoreOffense < 50 && scoreDefense >= 70) badgesHtml += '<span class="badge">🥷 수비헌신</span>';
+
             if (!badgesHtml) badgesHtml = '<span class="badge">🌱 성장중인 유망주</span>';
 
             // 3. 관계도 (Top 5 추출 로직으로 확장)
@@ -267,7 +297,6 @@
                 if (g.assist_id === targetId && g.scorer_id && !g.is_own_goal) assistStats[g.scorer_id] = (assistStats[g.scorer_id] || 0) + 1; 
             });
 
-            // 상위 5명을 추출하는 함수로 변경
             function getTopRelations(statsObj, isRate, type, minGames = 2) {
                 let results = [];
                 for (const id in statsObj) {
@@ -287,20 +316,19 @@
                 }
 
                 if (isRate) {
-                    if (type === 'duo') results.sort((a, b) => b.val - a.val); // 내림차순 (승률 높은 순)
-                    else if (type === 'enemy') results.sort((a, b) => a.val - b.val); // 오름차순 (천적: 내 승률이 낮은 순)
+                    if (type === 'duo') results.sort((a, b) => b.val - a.val); 
+                    else if (type === 'enemy') results.sort((a, b) => a.val - b.val); 
                 } else {
-                    results.sort((a, b) => b.val - a.val); // 내림차순
+                    results.sort((a, b) => b.val - a.val); 
                 }
                 
-                return results.slice(0, 5); // 최대 5명 반환
+                return results.slice(0, 5); 
             }
 
             const bestDuos = getTopRelations(duoStats, true, 'duo');
             const worstEnemies = getTopRelations(enemyStats, true, 'enemy');
             const bestPartners = getTopRelations(assistStats, false, 'assist');
 
-            // 렌더링 헬퍼 함수
             function renderRelationList(arr, type, basePercent) {
                 if (!arr || arr.length === 0) return '<div style="color:#a0aec0; font-size:13px; text-align:center; padding:15px 0; width:100%;">충분한 데이터가 없습니다. (최소 2경기)</div>';
                 
@@ -329,6 +357,17 @@
                 });
                 html += '</div>';
                 return html;
+            }
+
+            // 🔥 최근 3경기를 분석하여 기세(Trend) 뱃지 텍스트 계산
+            const recent3 = myGames.slice(0, 3);
+            let formTrendHtml = '<span style="color:#a0aec0; font-weight:bold;">데이터 부족</span>';
+            if (recent3.length >= 2) {
+                const recentWins = recent3.filter(g => g.result === 'win').length;
+                const recentLosses = recent3.filter(g => g.result === 'loss').length;
+                if (recentWins >= 2) formTrendHtml = '<span style="color:#38a169; font-weight:bold;">상승세 📈</span>';
+                else if (recentLosses >= 2) formTrendHtml = '<span style="color:#e53e3e; font-weight:bold;">하락세 📉</span>';
+                else formTrendHtml = '<span style="color:#718096; font-weight:bold;">유지 ➖</span>';
             }
 
             let timelineHtml = '';
@@ -427,13 +466,15 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-title">📈 최근 경기 폼 (Top 5)</div>
+                        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>📈 최근 경기 폼 (Top 5)</div>
+                            <div style="font-size: 13px; font-weight:normal;">동향: ${formTrendHtml}</div>
+                        </div>
                         ${myGames.length > 0 ? `<div class="timeline">${timelineHtml}</div>` : '<div style="font-size:13px; color:#a0aec0; text-align:center; padding:20px;">출전 기록이 없습니다.</div>'}
                     </div>
                 </div>
             `;
 
-            // 🔥 육각형 차트 스케일 보정 (시작점을 20으로 상향)
             const ctx = document.getElementById('radarChart').getContext('2d');
             new Chart(ctx, {
                 type: 'radar',
@@ -451,18 +492,17 @@
                         borderWidth: 2,
                     }]
                 },
-                // 🔥 육각형 차트 스케일 및 역주행 버그 보정
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         r: {
-                            min: 0,   // 마이너스로 뚫고 나가지 않도록 0으로 복구
+                            min: 0,
                             max: 100,
                             angleLines: { color: 'rgba(0,0,0,0.1)' },
                             grid: { color: 'rgba(0,0,0,0.1)' },
                             pointLabels: { font: { family: 'Pretendard', size: 12, weight: 'bold' }, color: '#4a5568' },
-                            ticks: { display: false, stepSize: 25 } // 25점 단위로 4구역(25, 50, 75, 100) 분할
+                            ticks: { display: false, stepSize: 25 }
                         }
                     },
                     plugins: {
