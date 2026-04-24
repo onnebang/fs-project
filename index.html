@@ -103,6 +103,16 @@
         .loading { text-align: center; padding: 40px; color: #a0aec0; font-weight: bold; font-size: 14px; }
         .match-list::-webkit-scrollbar { width: 6px; }
         .match-list::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 10px; }
+        /* ✨ 미니 전술판 (index.html 용) */
+        .mini-pitch { background: #276749; border: 2px solid white; border-radius: 8px; padding: 5px; position: relative; margin-top: 10px; overflow: hidden; max-width: 250px; margin-left: auto; margin-right: auto; }
+        .mini-pitch::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.4); }
+        .mini-pitch::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+        .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; position: relative; z-index: 2; }
+        .mini-cell { height: 35px; display: flex; justify-content: center; align-items: center; }
+        .mini-marker { background: white; color: #2d3748; font-size: 11px; font-weight: 900; padding: 3px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap; }
+        .mini-marker.gk { background: #ecc94b; color: #744210; }
+        .unplaced-list { text-align: center; font-size: 11px; color: #a0aec0; margin-top: 8px; }
+        
         /* ✨ 프리미엄 로딩 애니메이션 (Fade In & Slide Up) */
         @keyframes smoothLoad {
             0% { opacity: 0; transform: translateY(20px); }
@@ -270,7 +280,6 @@
                     const lineupA_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'A');
                     const lineupB_raw = lineupsData.filter(l => l.game_id === game.id && l.team === 'B');
 
-                    // ✨ 자체경기일 경우 다수결로 팀 이름 덮어쓰기
                     if (!isFriendly) {
                         const majorityA = getMajorityTeamName(lineupA_raw);
                         const majorityB = getMajorityTeamName(lineupB_raw);
@@ -278,14 +287,49 @@
                         if (majorityB) teamBName = majorityB;
                     }
 
+                    // ✨ 미니 전술판 생성 함수
+                    function buildMiniPitch(lineupRaw) {
+                        const zones = ['Pivo_L', 'Pivo', 'Pivo_R', 'Ala_L', 'C_Ala', 'Ala_R', 'Fixo_L', 'Fixo', 'Fixo_R', 'Blank1', 'GK', 'Blank2'];
+                        let pitchHtml = `<div class="mini-pitch"><div class="mini-grid">`;
+                        let placedCount = 0;
+                        
+                        zones.forEach(zone => {
+                            if (zone.startsWith('Blank')) { pitchHtml += `<div></div>`; return; }
+                            const p = lineupRaw.find(l => l.position === zone);
+                            if (p) {
+                                const pName = playersMap[p.player_id];
+                                pitchHtml += `<div class="mini-cell"><span class="mini-marker ${p.is_gk ? 'gk' : ''}">${pName}</span></div>`;
+                                placedCount++;
+                            } else {
+                                pitchHtml += `<div class="mini-cell"></div>`;
+                            }
+                        });
+                        pitchHtml += `</div></div>`;
+
+                        // 옛날 데이터(포지션 기록이 없는 경우) 처리
+                        const unplaced = lineupRaw.filter(l => !l.position || !zones.includes(l.position));
+                        let unplacedHtml = '';
+                        if (unplaced.length > 0) {
+                            unplacedHtml = `<div class="unplaced-list">미배치/과거기록: ${unplaced.map(l => playersMap[l.player_id]).join(', ')}</div>`;
+                        }
+                        
+                        // 포지션 배치된 사람이 1명도 없으면 옛날 텍스트 방식만 출력
+                        if (placedCount === 0) return `<div class="lineup-text" style="text-align:center;">${unplaced.map(l => playersMap[l.player_id]).join(', ')}</div>`;
+                        return pitchHtml + unplacedHtml;
+                    }
+
+                    const lineupAHtml = buildMiniPitch(lineupA_raw);
+                    const lineupBHtml = isFriendly ? '<div class="lineup-text" style="text-align:center;">상대팀 명단 생략</div>' : buildMiniPitch(lineupB_raw);
+
+
                     let lineupA = [], lineupB = [];
                     lineupA_raw.forEach(l => {
                         const name = playersMap[l.player_id] || '알수없음';
-                        lineupA.push(l.is_gk ? `${name}(K)` : name);
+                        lineupA.push(l.is_gk ? `${name}(GK)` : name);
                     });
                     lineupB_raw.forEach(l => {
                         const name = playersMap[l.player_id] || '알수없음';
-                        lineupB.push(l.is_gk ? `${name}(K)` : name);
+                        lineupB.push(l.is_gk ? `${name}(GK)` : name);
                     });
 
                     let goalsAHtml = '', goalsBHtml = '';
@@ -326,7 +370,7 @@
                             <div class="match-details" id="match-details-${game.id}">
                                 <div class="detail-row">
                                     <div class="detail-title" style="color:#3182ce;">${teamAName} 출전 (${lineupA.length}명)</div>
-                                    <div class="lineup-text">${lineupA.join(', ') || '기록 없음'}</div>
+                                    <div class="lineup-text">${lineupAHtml}</div>
                                     <div style="margin-top:8px;">${goalsAHtml}</div>
                                 </div>
                                 <div class="detail-row" style="margin-bottom:0;">
