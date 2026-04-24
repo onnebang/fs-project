@@ -439,7 +439,67 @@
             `;
 
             // ---------------------------------------------------------
-            // 🏆 종합 스탯 리더보드 (승점률 정렬 알고리즘 적용)
+            // 🔥 [신규 추가] 이전 회차(가장 최근 모임일 이전) 랭킹 역산 로직
+            // ---------------------------------------------------------
+            // 1. 가장 최근 모임일 구하기 (gamesData는 이미 최신순 정렬됨)
+            const distinctDates = [...new Set(gamesData.map(g => g.match_days.match_date))];
+            const latestDateStr = distinctDates.length > 0 ? distinctDates[0] : null;
+            
+            // 2. 최근 모임일을 제외한 과거 경기들만 필터링
+            const prevGames = gamesData.filter(g => g.match_days.match_date !== latestDateStr);
+            const prevGameIds = prevGames.map(g => g.id);
+
+            const prevStats = {};
+            playersData.forEach(p => {
+                prevStats[p.id] = { id: p.id, apps: 0, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, conceded: 0, teamGoals: 0 };
+            });
+
+            // 3. 과거 기록으로 스탯 재계산
+            lineupsData.filter(l => prevGameIds.includes(l.game_id)).forEach(l => {
+                const pStat = prevStats[l.player_id];
+                const game = prevGames.find(g => g.id === l.game_id);
+                if (pStat && game) {
+                    pStat.apps += 1;
+                    const winner = (game.team_a_score > game.team_b_score) ? 'A' : (game.team_b_score > game.team_a_score) ? 'B' : 'DRAW';
+                    if (winner === l.team) pStat.wins += 1;
+                    else if (winner === 'DRAW') pStat.draws += 1;
+                    else pStat.losses += 1;
+                    
+                    pStat.conceded += (l.team === 'A') ? game.team_b_score : game.team_a_score;
+                    pStat.teamGoals += (l.team === 'A') ? game.team_a_score : game.team_b_score;
+                }
+            });
+
+            goalsData.filter(g => prevGameIds.includes(g.game_id)).forEach(g => {
+                if (!g.is_own_goal && g.scorer_id && prevStats[g.scorer_id]) prevStats[g.scorer_id].goals += 1;
+                if (g.assist_id && prevStats[g.assist_id]) prevStats[g.assist_id].assists += 1;
+            });
+
+            const prevActivePlayers = Object.values(prevStats).filter(s => s.apps > 0);
+            const prevStatsArray = prevActivePlayers.map(s => {
+                const points = s.goals + s.assists;
+                const gd = s.teamGoals - s.conceded; 
+                const ptsPercent = s.apps > 0 ? Math.round(((s.wins * 3 + s.draws * 1) / (s.apps * 3)) * 100) : 0;
+                return { ...s, points, gd, ptsPercent };
+            });
+
+            // 4. 과거 스탯 기준으로 정렬하여 이전 랭킹 생성
+            prevStatsArray.sort((a, b) => {
+                if (b.ptsPercent !== a.ptsPercent) return b.ptsPercent - a.ptsPercent;
+                if (b.goals !== a.goals) return b.goals - a.goals;
+                if (b.assists !== a.assists) return b.assists - a.assists;
+                if (b.points !== a.points) return b.points - a.points;
+                if (a.apps !== b.apps) return a.apps - b.apps;
+                return b.gd - a.gd;
+            });
+
+            const prevRankMap = {};
+            prevStatsArray.forEach((s, idx) => {
+                prevRankMap[s.id] = idx + 1;
+            });
+
+            // ---------------------------------------------------------
+            // 🏆 종합 스탯 리더보드 (현재 랭킹 정렬 및 변동폭 UI 적용)
             // ---------------------------------------------------------
             statsArray.sort((a, b) => {
                 if (b.ptsPercent !== a.ptsPercent) return b.ptsPercent - a.ptsPercent; // 1순위: 승점률
@@ -455,16 +515,39 @@
 
             statsArray.forEach((s, idx) => {
                 const tr = document.createElement('tr');
+                const currentRank = idx + 1;
+                
                 let rankClass = 'rank-badge';
-                if(idx === 0) rankClass += ' rank-1';
-                else if(idx === 1) rankClass += ' rank-2';
-                else if(idx === 2) rankClass += ' rank-3';
+                if(currentRank === 1) rankClass += ' rank-1';
+                else if(currentRank === 2) rankClass += ' rank-2';
+                else if(currentRank === 3) rankClass += ' rank-3';
+
+                // ✨ 순위 변동폭 계산 및 아이콘 생성
+                const prevRank = prevRankMap[s.id];
+                let rankChangeHtml = '<span style="font-size:10px; color:#a0aec0; margin-top:2px;">-</span>'; // 변동 없음
+                
+                if (prevRank) {
+                    const diff = prevRank - currentRank; // 이전 순위 - 현재 순위
+                    if (diff > 0) { // 순위 상승 (이전 5위 -> 현재 3위 : +2)
+                        rankChangeHtml = `<span style="font-size:10px; color:#e53e3e; font-weight:900; margin-top:2px;">▲ ${diff}</span>`;
+                    } else if (diff < 0) { // 순위 하락
+                        rankChangeHtml = `<span style="font-size:10px; color:#3182ce; font-weight:900; margin-top:2px;">▼ ${Math.abs(diff)}</span>`;
+                    }
+                } else if (s.apps > 0) {
+                    // 이번 주에 처음 뛴(명단에 진입한) 선수
+                    rankChangeHtml = `<span style="font-size:10px; color:#ed8936; font-weight:900; margin-top:2px;">NEW</span>`;
+                }
 
                 const gdColor = s.gd > 0 ? '#38a169' : (s.gd < 0 ? '#e53e3e' : '#718096');
                 const gdText = s.gd > 0 ? `+${s.gd}` : s.gd;
 
                 tr.innerHTML = `
-                    <td><span class="${rankClass}">${idx + 1}</span></td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                            <span class="${rankClass}">${currentRank}</span>
+                            ${rankChangeHtml}
+                        </div>
+                    </td>
                     <td class="player-name" onclick="goToPlayerDetail('${s.name}')">${s.name}</td>
                     <td class="col-winrate" style="line-height:1.2; padding-top:12px;">
                         <span style="font-size:15px;">${s.ptsPercent}%</span><br>
