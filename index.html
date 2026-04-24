@@ -267,15 +267,15 @@
                         if (majorityB) teamBName = majorityB;
                     }
 
-                    // let lineupA = [], lineupB = [];
-                    // lineupA_raw.forEach(l => {
-                    //     const name = playersMap[l.player_id] || '알수없음';
-                    //     lineupA.push(l.is_gk ? `${name}(K)` : name);
-                    // });
-                    // lineupB_raw.forEach(l => {
-                    //     const name = playersMap[l.player_id] || '알수없음';
-                    //     lineupB.push(l.is_gk ? `${name}(K)` : name);
-                    // });
+                    let lineupA = [], lineupB = [];
+                    lineupA_raw.forEach(l => {
+                        const name = playersMap[l.player_id] || '알수없음';
+                        lineupA.push(l.is_gk ? `${name}(K)` : name);
+                    });
+                    lineupB_raw.forEach(l => {
+                        const name = playersMap[l.player_id] || '알수없음';
+                        lineupB.push(l.is_gk ? `${name}(K)` : name);
+                    });
 
                     let goalsAHtml = '', goalsBHtml = '';
                     const gameGoals = goalsData.filter(g => g.game_id === game.id);
